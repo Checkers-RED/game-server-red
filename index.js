@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
     request.send(json); //хз
 
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        console.log(request.response); //вывод в консоль
+        //console.log(request.response); //вывод в консоль
         checkers = JSON.parse(request.response); //запись в переменную ответ с сервера
         res.status(200).json(checkers); //ну тут статус код
     }
@@ -89,7 +89,7 @@ app.get('/checker_movement', (req, res) => {
     }
     else {
       console.log('2'); //вывод в консоль
-      res.status(400).send({ status: "checker is not chosen" });  //статус код не пришел
+      res.status(400).send({ status: "new coordinates are not chosen" });  //статус код не пришел
       return;
     }  
   }
@@ -98,74 +98,60 @@ app.get('/checker_movement', (req, res) => {
 //При выполнении пост запроса мы выполняем перемещение шашки и вовзращаем статус выполнения
 app.post('/', (req, res) => {
   //полученый в гет запросе json разбивают на локальные перменные
-  color = req.body.color;
-  coordinate_x = req.body.coordinate_x;
-  coordinate_y = req.body.coordinate_y;
-  new_coordinate_x = req.body.new_coordinate_x;
-  new_coordinate_y = req.body.new_coordinate_y;
-  console.log('Coordinates of', color, 'will be changed:\nfrom:', 
-  coordinate_x, coordinate_y, '\nto:', new_coordinate_x, new_coordinate_y);
-
+  //color_chCh, h_chCh, v_chCh, isQ_chCh, canB_chCh
+  //var new_h_Ch, new_v_Ch
+  console.log('Coordinates of', color_chCh, 'will be changed:\nfrom:', 
+  h_chCh, v_chCh, '\nto:', new_h_Ch, new_v_Ch);
 
 //Провести валидацию, возможно ли двинуть шашку на это место
 
 active_color = []; //массив шашек текущего игрока
 inactive_color = []; //массив шашек другого игрока
 //Валидация цвета
-  if (color == "white") {
+  if (color_chCh == "white") {
     active_color = checkers.white; //запись всех элементов с цветом white в первый массив
     inactive_color = checkers.black; //black во второй массив
-    console.log('Before:', checkers.white); //вывод на консоль
   }
   else 
-  if (color == "black") {
+  if (color_chCh == "black") {
     active_color = checkers.black; //тут все наоборот
     inactive_color = checkers.white;
-    console.log('Before:', checkers.black);
   }
   else {
-    statuscode = { status: "error: no such color" }; //вывод ошибки если цвето неправильный
+    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
     res.status(400).send(statuscode);
     return;
   }
 
-//Ищем шашку и меняем параметры
+  console.log('Coordinates of current player:\n',
+  'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
+  //перемещаемой шашки
+  //Ищем шашку и меняем параметры
   for (var i = 0; i < active_color.length; i++) {
-    if (active_color[i].coordinate_x == coordinate_x)
-      if (active_color[i].coordinate_y == coordinate_y) 
+    if (active_color[i].horiz == h_chCh)
+      if (active_color[i].vertic == v_chCh) 
       {
         //Функция валидации хода
-        busy = 0; //0 - свободно, 1 - те же самые координаты, 2 - занято
+        busy = false; //false - свободно, true - занято
         for (var j = 0; j < active_color.length; j++)
-          if (active_color[j].coordinate_x == new_coordinate_x)
-            if (active_color[j].coordinate_y == new_coordinate_y) {
-              if (i == j)
-                busy = 1;
-              else
-                busy = 2;
-            }
+          if (active_color[j].horiz == new_h_Ch)
+            if (active_color[j].vertic == new_v_Ch) 
+                busy = true;
         for (var j = 0; j < inactive_color.length; j++)
-          if (inactive_color[j].coordinate_x == new_coordinate_x)
-            if (inactive_color[j].coordinate_y == new_coordinate_y)
-              busy = 2;
-        if (busy == 0) {
-          active_color[i].coordinate_x = new_coordinate_x;
-          active_color[i].coordinate_y = new_coordinate_y;
-          console.log('After:', active_color);
+          if (inactive_color[j].horiz == new_h_Ch)
+            if (inactive_color[j].vertic == new_v_Ch)
+              busy = true;
+        if (busy == false) {
+          active_color[i].horiz = new_h_Ch;
+          active_color[i].vertic = new_v_Ch;
+          console.log(' After:', JSON.stringify(active_color, ['horiz', 'vertic']));
           //Вернуть статус-код выполнения задачи
           statuscode = ({ status: "ok" });
           res.status(200).send(statuscode);
           return;
         }
-        else if (busy == 1) {
-          console.log('After: No changes');
-          //Вернуть статус-код о выборе тех же самых координат
-          statuscode = ({ status: "checker got unselected" });
-          res.status(300).send(statuscode);
-          return;
-        }
-        else if (busy == 2) {
-          console.log('After: No changes');
+        else {
+          console.log(' After: No changes');
           //Вернуть статус-код ошибки выбора новых координат
           statuscode = ({ status: "error: this coordinates are already occupied" });
           res.status(400).send(statuscode);
