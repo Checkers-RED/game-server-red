@@ -6,8 +6,8 @@ const port = 4000; //номер порта клиента
 var checkers; //json пришедший с сервера
 var chosen_ch; //json с выбранной шашкей
 var move_ch; //json с координатами перемещения
-var color_chCh, x_chCh, y_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
-var new_x_Ch, new_y_Ch; //координаты перемещения
+var color_chCh, h_chCh, v_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
+var new_h_Ch, new_v_Ch; //координаты перемещения
 var statuscode; //статус код, который будет отправлен в ответ к серверу
 const app = express();
 app.use(express.json());
@@ -50,11 +50,11 @@ app.get('/chosen_checker', (req, res) => {
       res.status(200).json(chosen_ch); //ну тут статус код
       //параметры выбранной шашки:
       color_chCh = chosen_ch.color; 
-      x_chCh = chosen_ch.coordinate_x;
-      y_chCh = chosen_ch.coordinate_y;
+      h_chCh = chosen_ch.horiz;
+      v_chCh = chosen_ch.vertic;
       isQ_chCh = chosen_ch.isQueen;
       canB_chCh = chosen_ch.canBeat;
-      console.log('Coordinates of chosen', color_chCh, 'checker are:', x_chCh, y_chCh,
+      console.log('Coordinates of chosen', color_chCh, 'checker are:', h_chCh, v_chCh,
       '\nThis checker is queen:', isQ_chCh,'\nThis checker can beat:', canB_chCh);
     }
     else {
@@ -83,9 +83,9 @@ app.get('/checker_movement', (req, res) => {
       move_ch = JSON.parse(req_coord_ch.response); //запись в переменную ответ с сервера
       res.status(200).json(move_ch); //ну тут статус код
       //параметры выбранной шашки: 
-      new_x_Ch = move_ch.coordinate_x;
-      new_y_Ch = move_ch.coordinate_y;
-      console.log('New coordinates are:', new_x_Ch, new_y_Ch);
+      new_h_Ch = move_ch.new_horiz;
+      new_v_Ch = move_ch.new_vertic;
+      console.log('New coordinates are:', new_h_Ch, new_v_Ch);
     }
     else {
       console.log('2'); //вывод в консоль
