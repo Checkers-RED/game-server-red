@@ -8,6 +8,7 @@ var chosen_ch; //json с выбранной шашкей
 var move_ch; //json с координатами перемещения
 var color_chCh, h_chCh, v_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
 var new_h_Ch, new_v_Ch; //координаты перемещения
+var checkers_ch; //обновленная информация о шашках
 var statuscode; //статус код, который будет отправлен в ответ к серверу
 const app = express();
 app.use(express.json());
@@ -123,7 +124,7 @@ inactive_color = []; //массив шашек другого игрока
     return;
   }
 
-  console.log('Coordinates of current player:\n',
+  console.log('Coordinates of checkers of current player:\n',
   'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
   //перемещаемой шашки
   //Ищем шашку и меняем параметры
@@ -142,12 +143,33 @@ inactive_color = []; //массив шашек другого игрока
             if (inactive_color[j].vertic == new_v_Ch)
               busy = true;
         if (busy == false) {
+          //если валидация пройдена, то шашка перемещается на новые координаты:
           active_color[i].horiz = new_h_Ch;
           active_color[i].vertic = new_v_Ch;
           console.log(' After:', JSON.stringify(active_color, ['horiz', 'vertic']));
+          //далее создаем обнавленные данные об игровой доске:
+          if (color_chCh == "white") {
+            checkers_ch = {
+              white: active_color,
+              black: inactive_color
+            }
+          }
+          else 
+          if (color_chCh == "black") {
+            checkers_ch = {
+              white: inactive_color,
+              black: active_color
+            }
+          }
+          else {
+            statuscode = { status: "error: invalid color" }; //вывод ошибки если цвет неправильный
+            res.status(400).send(statuscode);
+            return;
+          }
           //Вернуть статус-код выполнения задачи
           statuscode = ({ status: "ok" });
           res.status(200).send(statuscode);
+          //console.log(checkers_ch);
           return;
         }
         else {
