@@ -6,7 +6,7 @@ const port = 4000; //номер порта клиента
 var checkers; //json пришедший с сервера
 var chosen_ch; //json с выбранной шашкей
 var color_chCh, x_chCh, y_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
-var statuscode; //статус код, который будет отправлен в ответ серверу
+var statuscode; //статус код, который будет отправлен в ответ к серверу
 const app = express();
 app.use(express.json());
 
