@@ -104,11 +104,11 @@ function reg_move_not_Q_check(ch1, ch2) {
   //изначально записываем все возможные тихие ходы шашки:
   if (color_chCh == "white") {
     reg_moves[0] = { horiz: h_chCh+1, vertic: v_chCh+1 };
-    reg_moves[1] = { horiz: h_chCh-1, vertic: v_chCh+1 };
+    reg_moves[1] = { horiz: h_chCh+1, vertic: v_chCh-1 };
   }
   else 
   if (color_chCh == "black") {
-    reg_moves[0] = { horiz: h_chCh+1, vertic: v_chCh-1 };
+    reg_moves[0] = { horiz: h_chCh-1, vertic: v_chCh+1 };
     reg_moves[1] = { horiz: h_chCh-1, vertic: v_chCh-1 };
   }
   //теперь удалим из списка те ходы, которые ограничены:
