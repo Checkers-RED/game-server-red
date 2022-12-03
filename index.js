@@ -96,11 +96,58 @@ app.get('/checker_movement', (req, res) => {
   }
 });
 
+//набор функций, которые будут использоваться для различных проверок:
+//проверка доступности тихого хода простой шашки:
+function reg_move_not_Q_check(ch1, ch2) {
+  //h_chCh v_chCh
+  var reg_moves = []; //список тихих ходов
+  var brfl = false; //вспомогательный флаг
+  //изначально записываем все возможные тихие ходы шашки:
+  if (color_chCh == "white") {
+    reg_moves[0] = { horiz: h_chCh+1, vertic: v_chCh+1 };
+    reg_moves[1] = { horiz: h_chCh-1, vertic: v_chCh+1 };
+  }
+  else 
+  if (color_chCh == "black") {
+    reg_moves[0] = { horiz: h_chCh+1, vertic: v_chCh-1 };
+    reg_moves[1] = { horiz: h_chCh-1, vertic: v_chCh-1 };
+  }
+  //теперь удалим из списка те ходы, которые ограничены:
+  for (var i = 0; i < reg_moves.length; i++) { 
+    //сначала проверим на выход за границы игровой доски:
+    if ((reg_moves[i].horiz < 1 || reg_moves[i].horiz > 8) || 
+      (reg_moves[i].vertic < 1 || reg_moves[i].vertic > 8)) {
+        reg_moves.splice(i,1);
+        i--;
+        continue;
+      }
+    //потом проверим на мешающиеся шашки:
+    //союзные:
+    for (var j = 0; j < ch1.length; j++)
+      if (ch1[j].horiz == reg_moves[i].horiz)
+        if (ch1[j].vertic == reg_moves[i].vertic) {
+          reg_moves.splice(i,1);
+          brfl = true;
+          break;
+        }
+    //и шашки оппонента:
+    for (var j = 0; j < ch2.length; j++)
+      if (ch2[j].horiz == reg_moves[i].horiz)
+        if (ch2[j].vertic == reg_moves[i].vertic) {
+          reg_moves.splice(i,1);
+          brfl = true;
+          break;
+        }
+    if (brfl == true) {
+      i--;
+    }
+  }
+  console.log(reg_moves); //вывод в консоль
+}
+
 //При выполнении пост запроса мы выполняем перемещение шашки и вовзращаем статус выполнения
 app.post('/', (req, res) => {
   //полученый в гет запросе json разбивают на локальные перменные
-  //color_chCh, h_chCh, v_chCh, isQ_chCh, canB_chCh
-  //var new_h_Ch, new_v_Ch
   console.log('Coordinates of', color_chCh, 'will be changed:\nfrom:', 
   h_chCh, v_chCh, '\nto:', new_h_Ch, new_v_Ch);
 
@@ -123,7 +170,7 @@ inactive_color = []; //массив шашек другого игрока
     res.status(400).send(statuscode);
     return;
   }
-
+  reg_move_not_Q_check(active_color, inactive_color);
   console.log('Coordinates of checkers of current player:\n',
   'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
   //перемещаемой шашки
