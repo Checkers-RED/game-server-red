@@ -4,6 +4,8 @@ const XMLHttpRequest = require('xhr2');
 const hostname = '127.0.0.1'; //хост
 const port = 4000; //номер порта клиента
 var checkers; //json пришедший с сервера
+var chosen_ch; //json с выбранной шашкей
+var color_chCh, x_chCh, y_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
 var statuscode; //статус код, который будет отправлен в ответ серверу
 const app = express();
 app.use(express.json());
@@ -27,8 +29,42 @@ app.get('/', (req, res) => {
     }
 })
 
+//получение координат шашки, которой будут ходить
+app.get('/chosen_checker', (req, res) => {
+  const json = JSON.stringify({}); //создаем пустой json
+
+  const req_chos_ch = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+
+  req_chos_ch.open("GET", 'http://localhost:3000/choose'); //гет запрос на сервер
+  req_chos_ch.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+
+  req_chos_ch.send(json); //хз
+
+  req_chos_ch.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+    if (req_chos_ch.response) {
+      //статус код пришел
+      console.log('1'); //вывод в консоль
+      chosen_ch = JSON.parse(req_chos_ch.response); //запись в переменную ответ с сервера
+      res.status(200).json(chosen_ch); //ну тут статус код
+      //параметры выбранной шашки:
+      color_chCh = chosen_ch.color; 
+      x_chCh = chosen_ch.coordinate_x;
+      y_chCh = chosen_ch.coordinate_y;
+      isQ_chCh = chosen_ch.isQueen;
+      canB_chCh = chosen_ch.canBeat;
+      console.log('Coordinates of chosen', color_chCh, 'checker are:', x_chCh, y_chCh,
+      '\nThis checker is queen:', isQ_chCh,'\nThis checker can beat:', canB_chCh);
+    }
+    else {
+      console.log('2'); //вывод в консоль
+      res.status(400).send({ status: "checker is not chosen" });  //статус код не пришел
+      return;
+    }  
+  }
+});
+
 //При выполнении пост запроса мы выполняем перемещение шашки и вовзращаем статус выполнения
-app.post('/', function (req, res) {
+app.post('/', (req, res) => {
   //полученый в гет запросе json разбивают на локальные перменные
   color = req.body.color;
   coordinate_x = req.body.coordinate_x;
@@ -110,6 +146,7 @@ inactive_color = []; //массив шашек другого игрока
 statuscode = ({ status: "error: no such checker" });
 res.status(400).send(statuscode);
 });
+
 //гет запрос к которому обратится сервер чтобы принять статус код
 app.get('/statuscode', (req, res) => {
   res.status(200).json(statuscode);
