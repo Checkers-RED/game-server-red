@@ -99,7 +99,6 @@ app.get('/checker_movement', (req, res) => {
 //набор функций, которые будут использоваться для различных проверок:
 //проверка доступности тихого хода простой шашки:
 function reg_move_not_Q_check(ch1, ch2) {
-  //h_chCh v_chCh
   var reg_moves = []; //список тихих ходов
   var brfl = false; //вспомогательный флаг
   //изначально записываем все возможные тихие ходы шашки:
@@ -122,16 +121,15 @@ function reg_move_not_Q_check(ch1, ch2) {
         continue;
       }
     //потом проверим на мешающиеся шашки:
-    //союзные:
     for (var j = 0; j < ch1.length; j++)
+      //союзные:
       if (ch1[j].horiz == reg_moves[i].horiz)
         if (ch1[j].vertic == reg_moves[i].vertic) {
           reg_moves.splice(i,1);
           brfl = true;
           break;
         }
-    //и шашки оппонента:
-    for (var j = 0; j < ch2.length; j++)
+      //оппонента:
       if (ch2[j].horiz == reg_moves[i].horiz)
         if (ch2[j].vertic == reg_moves[i].vertic) {
           reg_moves.splice(i,1);
@@ -140,7 +138,96 @@ function reg_move_not_Q_check(ch1, ch2) {
         }
     if (brfl == true) {
       i--;
+      brfl = false;
     }
+  }
+  console.log(reg_moves); //вывод в консоль
+}
+
+//проверка доступности тихого хода дамки:
+function reg_move_Q_check(ch1, ch2) {
+  var reg_moves = []; //список тихих ходов
+  var brfl = false; //вспомогательный флаг
+  var count = 0; //номер в списке ходов
+  //будем искать тихие ходы во всех 4 направлениях:
+  //влево-вниз:
+  for (var k = 0; k < 8; k++) { //будем считать до 8, так как это максимум на доске
+    //сначала посмотрим, является ли поле занято другой шашкой
+    for (var j = 0; j < ch1.length; j++) {
+      if (ch1[j].horiz == h_chCh-(k+1) && ch1[j].vertic == v_chCh-(k+1)) {
+          brfl = true; //если да, то поиск прекращается в этом направлении
+          break;
+        }
+      if (ch2[j].horiz == h_chCh-(k+1) && ch2[j].vertic == v_chCh-(k+1)) {
+          brfl = true;
+          break;
+        }
+      }
+    //так же проверяется, не вышла ли проверка за границы игровой доски
+    if ((h_chCh-(k+1)) < 1 || (v_chCh-(k+1)) < 1 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    //если ни одно из условий не нарушено, то поле записывается в список
+    reg_moves[count] = { horiz: h_chCh-(k+1), vertic: v_chCh-(k+1) };
+    count++;
+  }
+  //вниз-вправо:
+  for (var k = 0; k < 8; k++) {
+    for (var j = 0; j < ch1.length; j++) {
+      if (ch1[j].horiz == h_chCh-(k+1) && ch1[j].vertic == v_chCh+(k+1)) {
+          brfl = true;
+          break;
+        }
+      if (ch2[j].horiz == h_chCh-(k+1) && ch2[j].vertic == v_chCh+(k+1)) {
+          brfl = true;
+          break;
+        }
+      }
+    if ((h_chCh-(k+1)) < 1 || (v_chCh+(k+1)) > 1 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    reg_moves[count] = { horiz: h_chCh-(k+1), vertic: v_chCh+(k+1) };
+    count++;
+  }
+  //вверх-влево:
+  for (var k = 0; k < 8; k++) {
+    for (var j = 0; j < ch1.length; j++) {
+      if (ch1[j].horiz == h_chCh+(k+1) && ch1[j].vertic == v_chCh-(k+1)) {
+          brfl = true;
+          break;
+        }
+      if (ch2[j].horiz == h_chCh+(k+1) && ch2[j].vertic == v_chCh-(k+1)) {
+          brfl = true;
+          break;
+        }
+      }
+    if ((h_chCh+(k+1)) > 8 || (v_chCh-(k+1)) < 1 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    reg_moves[count] = { horiz: h_chCh+(k+1), vertic: v_chCh-(k+1) };
+    count++;
+  }
+  //вверх-вправо:
+  for (var k = 0; k < 8; k++) {
+    for (var j = 0; j < ch1.length; j++) {
+      if (ch1[j].horiz == h_chCh+(k+1) && ch1[j].vertic == v_chCh+(k+1)) {
+          brfl = true;
+          break;
+        }
+      if (ch2[j].horiz == h_chCh+(k+1) && ch2[j].vertic == v_chCh+(k+1)) {
+          brfl = true;
+          break;
+        }
+      }
+    if ((h_chCh-(k+1)) > 8 || (v_chCh-(k+1)) > 8 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    reg_moves[count] = { horiz: h_chCh+(k+1), vertic: v_chCh+(k+1) };
+    count++;
   }
   console.log(reg_moves); //вывод в консоль
 }
@@ -170,7 +257,8 @@ inactive_color = []; //массив шашек другого игрока
     res.status(400).send(statuscode);
     return;
   }
-  reg_move_not_Q_check(active_color, inactive_color);
+  //reg_move_not_Q_check(active_color, inactive_color);
+  reg_move_Q_check(active_color, inactive_color);
   console.log('Coordinates of checkers of current player:\n',
   'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
   //перемещаемой шашки
