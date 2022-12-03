@@ -150,60 +150,66 @@ function reg_move_Q_check(ch1, ch2) {
   var brfl = false; //вспомогательный флаг
   var count = 0; //номер в списке ходов
   //будем искать тихие ходы во всех 4 направлениях:
-  //влево-вниз:
+  //вниз-влево:
   for (var k = 0; k < 8; k++) { //будем считать до 8, так как это максимум на доске
     //сначала посмотрим, является ли поле занято другой шашкой
     for (var j = 0; j < ch1.length; j++) {
-      if (ch1[j].horiz == h_chCh-(k+1) && ch1[j].vertic == v_chCh-(k+1)) {
+      var h = h_chCh-(k+1);
+      var v = v_chCh-(k+1);
+      if (ch1[j].horiz == h && ch1[j].vertic == v) {
           brfl = true; //если да, то поиск прекращается в этом направлении
           break;
         }
-      if (ch2[j].horiz == h_chCh-(k+1) && ch2[j].vertic == v_chCh-(k+1)) {
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
           brfl = true;
           break;
         }
       }
     //так же проверяется, не вышла ли проверка за границы игровой доски
-    if ((h_chCh-(k+1)) < 1 || (v_chCh-(k+1)) < 1 || brfl == true) {
+    if (h < 1 || v < 1 || brfl == true) {
       brfl = false;
       break;
     }
     //если ни одно из условий не нарушено, то поле записывается в список
-    reg_moves[count] = { horiz: h_chCh-(k+1), vertic: v_chCh-(k+1) };
+    reg_moves[count] = { horiz: h, vertic: v };
     count++;
   }
   //вниз-вправо:
   for (var k = 0; k < 8; k++) {
     for (var j = 0; j < ch1.length; j++) {
-      if (ch1[j].horiz == h_chCh-(k+1) && ch1[j].vertic == v_chCh+(k+1)) {
+      var h = h_chCh-(k+1);
+      var v = v_chCh+(k+1);
+      if (ch1[j].horiz == h && ch1[j].vertic == v) {
           brfl = true;
           break;
         }
-      if (ch2[j].horiz == h_chCh-(k+1) && ch2[j].vertic == v_chCh+(k+1)) {
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
           brfl = true;
           break;
         }
       }
-    if ((h_chCh-(k+1)) < 1 || (v_chCh+(k+1)) > 1 || brfl == true) {
+    if (h < 1 || v > 8 || brfl == true) {
       brfl = false;
       break;
     }
-    reg_moves[count] = { horiz: h_chCh-(k+1), vertic: v_chCh+(k+1) };
+    reg_moves[count] = { horiz: h, vertic: v };
     count++;
   }
   //вверх-влево:
   for (var k = 0; k < 8; k++) {
     for (var j = 0; j < ch1.length; j++) {
-      if (ch1[j].horiz == h_chCh+(k+1) && ch1[j].vertic == v_chCh-(k+1)) {
+      var h = h_chCh+(k+1);
+      var v = v_chCh-(k+1);
+      if (ch1[j].horiz == h && ch1[j].vertic == v) {
           brfl = true;
           break;
         }
-      if (ch2[j].horiz == h_chCh+(k+1) && ch2[j].vertic == v_chCh-(k+1)) {
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
           brfl = true;
           break;
         }
       }
-    if ((h_chCh+(k+1)) > 8 || (v_chCh-(k+1)) < 1 || brfl == true) {
+    if (h > 8 || v < 1 || brfl == true) {
       brfl = false;
       break;
     }
@@ -213,20 +219,22 @@ function reg_move_Q_check(ch1, ch2) {
   //вверх-вправо:
   for (var k = 0; k < 8; k++) {
     for (var j = 0; j < ch1.length; j++) {
-      if (ch1[j].horiz == h_chCh+(k+1) && ch1[j].vertic == v_chCh+(k+1)) {
+      var h = h_chCh+(k+1);
+      var v = v_chCh+(k+1);
+      if (ch1[j].horiz == h && ch1[j].vertic == v) {
           brfl = true;
           break;
         }
-      if (ch2[j].horiz == h_chCh+(k+1) && ch2[j].vertic == v_chCh+(k+1)) {
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
           brfl = true;
           break;
         }
       }
-    if ((h_chCh-(k+1)) > 8 || (v_chCh-(k+1)) > 8 || brfl == true) {
+    if (h > 8 || v > 8 || brfl == true) {
       brfl = false;
       break;
     }
-    reg_moves[count] = { horiz: h_chCh+(k+1), vertic: v_chCh+(k+1) };
+    reg_moves[count] = { horiz: h, vertic: v };
     count++;
   }
   console.log(reg_moves); //вывод в консоль
