@@ -120,16 +120,17 @@ function reg_move_not_Q_check(ch1, ch2) {
         i--;
         continue;
       }
-    //потом проверим на мешающиеся шашки:
+    //потом проверим свободно ли поле, на которое перемещается шашка:
+    //есть ли в полях союзные шашки?:
     for (var j = 0; j < ch1.length; j++)
-      //союзные:
       if (ch1[j].horiz == reg_moves[i].horiz)
         if (ch1[j].vertic == reg_moves[i].vertic) {
           reg_moves.splice(i,1);
           brfl = true;
           break;
         }
-      //оппонента:
+    //есть ли в полях шашки оппонента?:
+    for (var j = 0; j < ch2.length; j++)
       if (ch2[j].horiz == reg_moves[i].horiz)
         if (ch2[j].vertic == reg_moves[i].vertic) {
           reg_moves.splice(i,1);
@@ -157,14 +158,18 @@ function reg_move_Q_check(ch1, ch2) {
       var h = h_chCh-(k+1);
       var v = v_chCh-(k+1);
       if (ch1[j].horiz == h && ch1[j].vertic == v) {
-          brfl = true; //если да, то поиск прекращается в этом направлении
-          break;
-        }
-      if (ch2[j].horiz == h && ch2[j].vertic == v) {
-          brfl = true;
-          break;
-        }
+        brfl = true; //если да, то поиск прекращается в этом направлении
+        break;
       }
+    }
+    for (var j = 0; j < ch2.length; j++) {
+      var h = h_chCh-(k+1);
+      var v = v_chCh-(k+1);
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
     //так же проверяется, не вышла ли проверка за границы игровой доски
     if (h < 1 || v < 1 || brfl == true) {
       brfl = false;
@@ -180,14 +185,18 @@ function reg_move_Q_check(ch1, ch2) {
       var h = h_chCh-(k+1);
       var v = v_chCh+(k+1);
       if (ch1[j].horiz == h && ch1[j].vertic == v) {
-          brfl = true;
-          break;
-        }
-      if (ch2[j].horiz == h && ch2[j].vertic == v) {
-          brfl = true;
-          break;
-        }
+        brfl = true;
+        break;
       }
+    }
+    for (var j = 0; j < ch2.length; j++) {
+      var h = h_chCh-(k+1);
+      var v = v_chCh+(k+1);
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
     if (h < 1 || v > 8 || brfl == true) {
       brfl = false;
       break;
@@ -201,14 +210,18 @@ function reg_move_Q_check(ch1, ch2) {
       var h = h_chCh+(k+1);
       var v = v_chCh-(k+1);
       if (ch1[j].horiz == h && ch1[j].vertic == v) {
-          brfl = true;
-          break;
-        }
-      if (ch2[j].horiz == h && ch2[j].vertic == v) {
-          brfl = true;
-          break;
-        }
+        brfl = true;
+        break;
       }
+    }
+    for (var j = 0; j < ch2.length; j++) {
+      var h = h_chCh+(k+1);
+      var v = v_chCh-(k+1);
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
     if (h > 8 || v < 1 || brfl == true) {
       brfl = false;
       break;
@@ -222,14 +235,18 @@ function reg_move_Q_check(ch1, ch2) {
       var h = h_chCh+(k+1);
       var v = v_chCh+(k+1);
       if (ch1[j].horiz == h && ch1[j].vertic == v) {
-          brfl = true;
-          break;
-        }
-      if (ch2[j].horiz == h && ch2[j].vertic == v) {
-          brfl = true;
-          break;
-        }
+        brfl = true;
+        break;
       }
+    }
+    for (var j = 0; j < ch2.length; j++) {
+      var h = h_chCh+(k+1);
+      var v = v_chCh+(k+1);
+      if (ch2[j].horiz == h && ch2[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
     if (h > 8 || v > 8 || brfl == true) {
       brfl = false;
       break;
@@ -239,6 +256,55 @@ function reg_move_Q_check(ch1, ch2) {
   }
   console.log(reg_moves); //вывод в консоль
 }
+
+//проверка доступности ударного хода простой шашки:
+function beat_move_not_Q_check(ch1, ch2) {
+  var reg_moves = []; //список тихих ходов
+  var brfl = false; //вспомогательный флаг
+  //изначально записываем все возможные ударные ходы шашки:
+  if (color_chCh == "white") {
+    reg_moves[0] = { horiz: h_chCh+2, vertic: v_chCh+2 };
+    reg_moves[1] = { horiz: h_chCh+2, vertic: v_chCh-2 };
+  }
+  else 
+  if (color_chCh == "black") {
+    reg_moves[0] = { horiz: h_chCh-2, vertic: v_chCh+2 };
+    reg_moves[1] = { horiz: h_chCh-2, vertic: v_chCh-2 };
+  }
+  //теперь удалим из списка те ходы, которые ограничены:
+  for (var i = 0; i < reg_moves.length; i++) { 
+    //сначала проверим на выход за границы игровой доски:
+    if ((reg_moves[i].horiz < 1 || reg_moves[i].horiz > 8) || 
+      (reg_moves[i].vertic < 1 || reg_moves[i].vertic > 8)) {
+        reg_moves.splice(i,1);
+        i--;
+        continue;
+      }
+    //потом проверим свободно ли поле, на которое перемещается шашка:
+    for (var j = 0; j < ch1.length; j++) {
+      //есть ли в полях союзные шашки?:
+      if (ch1[j].horiz == reg_moves[i].horiz)
+        if (ch1[j].vertic == reg_moves[i].vertic) {
+          reg_moves.splice(i,1);
+          brfl = true;
+          break;
+        }
+      ////есть ли в полях шашки оппонента?:
+      if (ch2[j].horiz == reg_moves[i].horiz)
+        if (ch2[j].vertic == reg_moves[i].vertic) {
+          reg_moves.splice(i,1);
+          brfl = true;
+          break;
+        }
+      }
+    if (brfl == true) {
+      i--;
+      brfl = false;
+    }
+  }
+  console.log(reg_moves); //вывод в консоль
+}
+
 
 //При выполнении пост запроса мы выполняем перемещение шашки и вовзращаем статус выполнения
 app.post('/', (req, res) => {
@@ -265,6 +331,8 @@ inactive_color = []; //массив шашек другого игрока
     res.status(400).send(statuscode);
     return;
   }
+
+  //использование функций проверок тихих ходов:
   //reg_move_not_Q_check(active_color, inactive_color);
   reg_move_Q_check(active_color, inactive_color);
   console.log('Coordinates of checkers of current player:\n',
