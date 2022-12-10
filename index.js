@@ -259,50 +259,74 @@ function reg_move_Q_check(ch1, ch2) {
 
 //проверка доступности ударного хода простой шашки:
 function beat_move_not_Q_check(ch1, ch2) {
-  var reg_moves = []; //список тихих ходов
+  var beat_moves = []; //список ударных ходов
+  var enemy_check = []; //вспомогательный список полей с потеницальной шашкой оппонента
   var brfl = false; //вспомогательный флаг
-  //изначально записываем все возможные ударные ходы шашки:
+  //изначально записываем все возможные ударные ходы шашки и поля с потеницальной шашкой врага:
   if (color_chCh == "white") {
-    reg_moves[0] = { horiz: h_chCh+2, vertic: v_chCh+2 };
-    reg_moves[1] = { horiz: h_chCh+2, vertic: v_chCh-2 };
+    beat_moves[0] = { horiz: h_chCh+2, vertic: v_chCh+2 };
+    beat_moves[1] = { horiz: h_chCh+2, vertic: v_chCh-2 };
+    enemy_check[0] = { horiz: h_chCh+1, vertic: v_chCh+1 };
+    enemy_check[1] = { horiz: h_chCh+1, vertic: v_chCh-1 };
   }
   else 
   if (color_chCh == "black") {
-    reg_moves[0] = { horiz: h_chCh-2, vertic: v_chCh+2 };
-    reg_moves[1] = { horiz: h_chCh-2, vertic: v_chCh-2 };
+    beat_moves[0] = { horiz: h_chCh-2, vertic: v_chCh+2 };
+    beat_moves[1] = { horiz: h_chCh-2, vertic: v_chCh-2 };
+    enemy_check[0] = { horiz: h_chCh-1, vertic: v_chCh+1 };
+    enemy_check[1] = { horiz: h_chCh-1, vertic: v_chCh-1 };
   }
   //теперь удалим из списка те ходы, которые ограничены:
-  for (var i = 0; i < reg_moves.length; i++) { 
+  for (var i = 0; i < beat_moves.length; i++) { 
     //сначала проверим на выход за границы игровой доски:
-    if ((reg_moves[i].horiz < 1 || reg_moves[i].horiz > 8) || 
-      (reg_moves[i].vertic < 1 || reg_moves[i].vertic > 8)) {
-        reg_moves.splice(i,1);
+    if ((beat_moves[i].horiz < 1 || beat_moves[i].horiz > 8) || 
+      (beat_moves[i].vertic < 1 || beat_moves[i].vertic > 8)) {
+        beat_moves.splice(i,1);
         i--;
         continue;
       }
     //потом проверим свободно ли поле, на которое перемещается шашка:
-    for (var j = 0; j < ch1.length; j++) {
-      //есть ли в полях союзные шашки?:
-      if (ch1[j].horiz == reg_moves[i].horiz)
-        if (ch1[j].vertic == reg_moves[i].vertic) {
-          reg_moves.splice(i,1);
+    //есть ли в полях союзные шашки?:
+    for (var j = 0; j < ch1.length; j++) 
+      if (ch1[j].horiz == beat_moves[i].horiz)
+        if (ch1[j].vertic == beat_moves[i].vertic) {
           brfl = true;
           break;
         }
-      ////есть ли в полях шашки оппонента?:
-      if (ch2[j].horiz == reg_moves[i].horiz)
-        if (ch2[j].vertic == reg_moves[i].vertic) {
-          reg_moves.splice(i,1);
+    //есть ли в полях шашки оппонента?:
+    for (var j = 0; j < ch2.length; j++) 
+      if (ch2[j].horiz == beat_moves[i].horiz)
+        if (ch2[j].vertic == beat_moves[i].vertic) {
           brfl = true;
           break;
         }
-      }
+    //последняя проверка является на то, находится ли на пути шашка оппонента:
+    if (color_chCh == "white") {
+      brfl = true;
+      for (var j = 0; j < ch2.length; j++) 
+        if (ch2[j].horiz == enemy_check[i].horiz)
+          if (ch2[j].vertic == enemy_check[i].vertic) {
+            brfl = false;
+            break;
+          }
+    }
+    else 
+    if (color_chCh == "black") {
+      brfl = true;
+      for (var j = 0; j < ch1.length; j++) 
+        if (ch1[j].horiz == enemy_check[i].horiz)
+          if (ch1[j].vertic == enemy_check[i].vertic) {
+            brfl = false;
+            break;
+          }
+    }
     if (brfl == true) {
+      beat_moves.splice(i,1);
       i--;
       brfl = false;
     }
   }
-  console.log(reg_moves); //вывод в консоль
+  console.log(beat_moves); //вывод в консоль
 }
 
 
@@ -334,7 +358,8 @@ inactive_color = []; //массив шашек другого игрока
 
   //использование функций проверок тихих ходов:
   //reg_move_not_Q_check(active_color, inactive_color);
-  reg_move_Q_check(active_color, inactive_color);
+  //reg_move_Q_check(active_color, inactive_color);
+  beat_move_not_Q_check(active_color, inactive_color);
   console.log('Coordinates of checkers of current player:\n',
   'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
   //перемещаемой шашки
