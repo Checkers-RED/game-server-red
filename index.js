@@ -143,7 +143,7 @@ function reg_move_not_Q_check(OurCH, EnCH) {
       brfl = false;
     }
   }
-  console.log(reg_moves); //вывод в консоль
+  return reg_moves;
 }
 
 //проверка доступности тихого хода дамки:
@@ -255,7 +255,7 @@ function reg_move_Q_check(OurCH, EnCH) {
     reg_moves[count] = { horiz: h, vertic: v };
     count++;
   }
-  console.log(reg_moves); //вывод в консоль
+  return reg_moves;
 }
 
 //проверка доступности ударного хода простой шашки:
@@ -315,7 +315,7 @@ function beat_move_not_Q_check(OurCH, EnCH) {
       brfl = false;
     }
   }
-  console.log(beat_moves); //вывод в консоль
+  return beat_moves;
 }
 
 //проверка доступности ударного хода дамки:
@@ -549,20 +549,22 @@ function beat_move_Q_check(OurCH, EnCH) {
       count++;
     }
   }
-  console.log(beat_moves); //вывод в консоль
+  //console.log(enemy_check);
+  return beat_moves;
 }
 
 
 //При выполнении пост запроса мы выполняем перемещение шашки и вовзращаем статус выполнения
 app.post('/', (req, res) => {
   //полученый в гет запросе json разбивают на локальные перменные
-  console.log('Coordinates of', color_chCh, 'will be changed:\nfrom:', 
-  h_chCh, v_chCh, '\nto:', new_h_Ch, new_v_Ch);
+  //console.log('Coordinates of', color_chCh, 'will be changed:\nfrom:', 
+  //h_chCh, v_chCh, '\nto:', new_h_Ch, new_v_Ch);
 
 //Провести валидацию, возможно ли двинуть шашку на это место
 
 active_color = []; //массив шашек текущего игрока
 inactive_color = []; //массив шашек другого игрока
+moves = []; //массив доступных ходов выбранной шашки
 //Валидация цвета
   if (color_chCh == "white") {
     active_color = checkers.white; //запись всех элементов с цветом white в первый массив
@@ -579,13 +581,27 @@ inactive_color = []; //массив шашек другого игрока
     return;
   }
 
-  //использование функций проверок тихих ходов:
-  //reg_move_not_Q_check(active_color, inactive_color);
-  //reg_move_Q_check(active_color, inactive_color);
-  //beat_move_not_Q_check(active_color, inactive_color);
-  beat_move_Q_check(active_color, inactive_color);
-  console.log('Coordinates of checkers of current player:\n',
-  'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
+  //тест функций проверок тихих и ударных ходов:
+  if (canB_chCh == true) {
+    if (isQ_chCh == true) {
+      moves = beat_move_Q_check(active_color, inactive_color);
+    }
+    else {
+      moves = beat_move_not_Q_check(active_color, inactive_color);
+    }
+  }
+  else {
+    if (isQ_chCh == true) {
+      moves = reg_move_Q_check(active_color, inactive_color);
+    }
+    else {
+      moves = reg_move_not_Q_check(active_color, inactive_color);
+    }
+  }
+  console.log('Available moves of this checker are:\n', moves); //вывод списка ходов в консоль
+
+  //console.log('Coordinates of checkers of current player:\n',
+  //'Before:', JSON.stringify(active_color, ['horiz', 'vertic'])); //вывод в консоль текущих координат
   //перемещаемой шашки
   //Ищем шашку и меняем параметры
   for (var i = 0; i < active_color.length; i++) {
@@ -606,7 +622,7 @@ inactive_color = []; //массив шашек другого игрока
           //если валидация пройдена, то шашка перемещается на новые координаты:
           active_color[i].horiz = new_h_Ch;
           active_color[i].vertic = new_v_Ch;
-          console.log(' After:', JSON.stringify(active_color, ['horiz', 'vertic']));
+          //console.log(' After:', JSON.stringify(active_color, ['horiz', 'vertic']));
           //далее создаем обнавленные данные об игровой доске:
           if (color_chCh == "white") {
             checkers_ch = {
@@ -633,7 +649,7 @@ inactive_color = []; //массив шашек другого игрока
           return;
         }
         else {
-          console.log(' After: No changes');
+          //console.log(' After: No changes');
           //Вернуть статус-код ошибки выбора новых координат
           statuscode = ({ status: "error: this coordinates are already occupied" });
           res.status(400).send(statuscode);
