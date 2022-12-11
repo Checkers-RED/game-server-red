@@ -5,6 +5,7 @@ const XMLHttpRequest = require('xhr2');
 const hostname = '127.0.0.1'; //хост
 const port = 4000; //номер порта клиента
 var checkers; //json пришедший с сервера
+var BeatFlag = false; //флаг возможности нанести ударный ход
 var chosen_ch; //json с выбранной шашкей
 var move_ch; //json с координатами перемещения
 var color_chCh, h_chCh, v_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
@@ -553,8 +554,46 @@ function beat_move_Q_check(OurCH, EnCH) {
   return beat_moves;
 }
 
+//пост запрос в начале хода для различных проверок
+app.post('/turn_begin', (req, res) => {
+  active_color = []; //массив шашек текущего игрока
+  inactive_color = []; //массив шашек другого игрока
+  moves = []; //массив доступных ходов выбранной шашки
+//Валидация цвета
+  if (color_chCh == "white") {
+    active_color = checkers.white; //запись всех элементов с цветом white в первый массив
+    inactive_color = checkers.black; //black во второй массив
+  }
+  else 
+  if (color_chCh == "black") {
+    active_color = checkers.black; //тут все наоборот
+    inactive_color = checkers.white;
+  }
+  else {
+    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+    res.status(400).send(statuscode);
+    return;
+  }
+  //проверка на возможность игроком нанести ударный ход
+  for (var i = 0; i < active_color.length; i++) {
+    if (active_color[i].isQueen == true) {   
+      moves = beat_move_Q_check(active_color, inactive_color);
+    }
+    else {
+      moves = beat_move_not_Q_check(active_color, inactive_color);
+    }
+    if (moves.length > 0) {
+      BeatFlag = true;
+      break;
+    }
+  }
+  console.log('Player can make a beat move?:', BeatFlag);
+  statuscode = ({ status: "ok" });
+  res.status(200).send(statuscode);
+  return;
+})
 
-//При выполнении пост запроса мы выполняем перемещение шашки и вовзращаем статус выполнения
+//При выполнении пост запроса мы выполняем перемещение шашки и возвращаем статус выполнения
 app.post('/', (req, res) => {
   //полученый в гет запросе json разбивают на локальные перменные
   //console.log('Coordinates of', color_chCh, 'will be changed:\nfrom:', 
@@ -581,8 +620,8 @@ moves = []; //массив доступных ходов выбранной ша
     return;
   }
 
-  //тест функций проверок тихих и ударных ходов:
-  if (canB_chCh == true) {
+  //тест функций проверок тихих и ударных ходов выбранной шашки:
+  if (BeatFlag == true) {
     if (isQ_chCh == true) {
       moves = beat_move_Q_check(active_color, inactive_color);
     }
