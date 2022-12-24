@@ -554,6 +554,22 @@ function beat_move_Q_check(OurCH, EnCH) {
   return beat_moves;
 }
 
+//проверка на то, может ли простая шашка превратится в дамку
+function can_turn_Q_check(color, movedChecker) {
+  var horiz_to_check; //выбирается, какая диагональ будет чекатся
+  var Qfl = false; //возвращаемый флаг превращения в дамку
+  if (color == "white") {
+    horiz_to_check = 8;
+  }
+  else 
+  if (color == "black") {
+    horiz_to_check = 1;
+  }
+  if (movedChecker.horiz == horiz_to_check)
+    Qfl = true;
+  return Qfl;
+}
+
 //пост запрос в начале хода для различных проверок
 app.post('/turn_begin', (req, res) => {
   active_color = []; //массив шашек текущего игрока
@@ -600,7 +616,7 @@ app.post('/', (req, res) => {
   //h_chCh, v_chCh, '\nto:', new_h_Ch, new_v_Ch);
 
 //Провести валидацию, возможно ли двинуть шашку на это место
-
+var movedChecker = chosen_ch;
 active_color = []; //массив шашек текущего игрока
 inactive_color = []; //массив шашек другого игрока
 moves = []; //массив доступных ходов выбранной шашки
@@ -661,7 +677,12 @@ moves = []; //массив доступных ходов выбранной ша
           //если валидация пройдена, то шашка перемещается на новые координаты:
           active_color[i].horiz = new_h_Ch;
           active_color[i].vertic = new_v_Ch;
-          //console.log(' After:', JSON.stringify(active_color, ['horiz', 'vertic']));
+          movedChecker.horiz = new_h_Ch;
+          movedChecker.vertic = new_v_Ch;
+          var Qfl = can_turn_Q_check(movedChecker.color, movedChecker);
+            if (Qfl)
+              movedChecker.isQueen = true;
+          console.log(' Parameters of moved checker:', JSON.stringify(movedChecker));
           //далее создаем обнавленные данные об игровой доске:
           if (color_chCh == "white") {
             checkers_ch = {
