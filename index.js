@@ -317,7 +317,7 @@ function beat_move_not_Q_check(OurCH, EnCH, checker) {
     }
   }
   console.log('Potential enemy checkers:', enemy_check);
-  return [beat_moves, enemy_check];
+  return beat_moves;
 }
 
 //проверка доступности ударного хода дамки:
@@ -339,7 +339,13 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
         var h = checker.horiz-(k+1);
         var v = checker.vertic-(k+1);
         if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
-          enfl = true; //если да, то активируется флаг нахождения шашки оппонента
+          //сначала убедимся, что эта шашка не является уже побитой
+          if(EnCH[j].isBeaten == true) {
+            brfl = true; //если является, то поиск прекращается в этом направлении
+            break;
+          }
+          //в ином же случае шашка оппонента является потеницально подходящей
+          enfl = true; //активируется флаг нахождения шашки оппонента
           //в список записывается поле с шашкой оппонента
           enemy_check[countEn] = { horiz: h, vertic: v };
           countEn++;
@@ -399,6 +405,10 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
         var h = checker.horiz-(k+1);
         var v = checker.vertic+(k+1);
         if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          if(EnCH[j].isBeaten == true) {
+            brfl = true;
+            break;
+          }
           enfl = true;
           enemy_check[countEn] = { horiz: h, vertic: v };
           countEn++;
@@ -452,6 +462,10 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
         var h = checker.horiz+(k+1);
         var v = checker.vertic-(k+1);
         if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          if(EnCH[j].isBeaten == true) {
+            brfl = true;
+            break;
+          }
           enfl = true;
           enemy_check[countEn] = { horiz: h, vertic: v };
           countEn++;
@@ -505,6 +519,10 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
         var h = checker.horiz+(k+1);
         var v = checker.vertic+(k+1);
         if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          if(EnCH[j].isBeaten == true) {
+            brfl = true;
+            break;
+          }
           enfl = true;
           enemy_check[countEn] = { horiz: h, vertic: v };
           countEn++;
@@ -552,7 +570,7 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
     }
   }
   console.log('Potential enemy checkers:', enemy_check);
-  return [beat_moves, enemy_check];
+  return beat_moves;
 }
 
 //проверка на то, может ли простая шашка превратится в дамку
@@ -616,8 +634,8 @@ function addit_beat_move_check(OurCH, EnCH, movedChecker) {
   var bfl = false;
   moves = []; //массив доступных ходов перемещенной шашки
   //проверка на возможность игроком нанести еще один ударный ход
-  if (movedChecker.isQueen == true) [moves,] = beat_move_Q_check(OurCH, EnCH, movedChecker);
-  else [moves,] = beat_move_not_Q_check(OurCH, EnCH, movedChecker);
+  if (movedChecker.isQueen == true) moves = beat_move_Q_check(OurCH, EnCH, movedChecker);
+  else moves = beat_move_not_Q_check(OurCH, EnCH, movedChecker);
   if (moves.length > 0) bfl = true;
   console.log('Player can make another beat move?:', bfl);
   return moves; //вывод ходов, если они имеются
@@ -645,10 +663,9 @@ app.post('/turn_begin', (req, res) => {
   }
   //проверка на возможность игроком нанести ударный ход
   for (var i = 0; i < active_color.length; i++) {
-    active_color[i].color = color_chCh;
     if (active_color[i].isQueen == true) 
-      [moves,] = beat_move_Q_check(active_color, inactive_color, active_color[i]);
-    else [moves,] = beat_move_not_Q_check(active_color, inactive_color, active_color[i]);
+      moves = beat_move_Q_check(active_color, inactive_color, active_color[i]);
+    else moves = beat_move_not_Q_check(active_color, inactive_color, active_color[i]);
     if (moves.length > 0) {
       BeatFlag = true;
       break;
@@ -691,10 +708,10 @@ var potential_enemies = []; //массив потеницальных шашек
   //тест функций проверок тихих и ударных ходов выбранной шашки:
   if (BeatFlag == true) {
     if (isQ_chCh == true) {
-      [moves, potential_enemies] = beat_move_Q_check(active_color, inactive_color, chosen_ch);
+      moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
     }
     else {
-      [moves, potential_enemies] = beat_move_not_Q_check(active_color, inactive_color, chosen_ch);
+      moves = beat_move_not_Q_check(active_color, inactive_color, chosen_ch);
     }
   }
   else {
@@ -725,17 +742,17 @@ var potential_enemies = []; //массив потеницальных шашек
           //если валидация пройдена, то шашка перемещается на новые координаты:
           active_color[i].horiz = new_h_Ch;
           active_color[i].vertic = new_v_Ch;
-          if (BeatFlag == true)
-            inactive_color = beating(chosen_ch, move_ch, inactive_color);
-          console.log('Enemy checkers after beating move:', inactive_color);
           movedChecker.horiz = new_h_Ch;
           movedChecker.vertic = new_v_Ch;
           //проверка на то, дошла или шашка до последней горизонтали
           var Qfl = can_turn_Q_check(movedChecker.color, movedChecker);
-            if (Qfl)
-              //если да, то она сразу превращается в дамку
-              movedChecker.isQueen = true;
+          //если да, то она сразу превращается в дамку
+          if (Qfl) movedChecker.isQueen = true;
           console.log('Parameters of moved checker:', JSON.stringify(movedChecker));
+          //если это ударный ход, то шашка оппонента становится побитой
+          if (BeatFlag == true)
+            inactive_color = beating(chosen_ch, move_ch, inactive_color);
+          //console.log('Enemy checkers after beating move:', inactive_color);
           //далее создаем обнавленные данные об игровой доске:
           if (color_chCh == "white") {
             checkers_ch = {
