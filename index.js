@@ -8,9 +8,8 @@ var checkers; //json пришедший с сервера
 var BeatFlag = false; //флаг возможности нанести ударный ход
 var chosen_ch; //json с выбранной шашкей
 var move_ch; //json с координатами перемещения
-var color_chCh, h_chCh, v_chCh, isQ_chCh, canB_chCh; //параметры выбранной шашки
+var color_chCh, h_chCh, v_chCh, isQ_chCh; //параметры выбранной шашки
 var new_h_Ch, new_v_Ch; //координаты перемещения
-var checkers_ch; //измененный json всех шашек
 const app = express();
 app.use(express.json());
 
@@ -55,9 +54,8 @@ app.get('/chosen_checker', (req, res) => {
       h_chCh = chosen_ch.horiz;
       v_chCh = chosen_ch.vertic;
       isQ_chCh = chosen_ch.isQueen;
-      canB_chCh = chosen_ch.canBeat;
       console.log('Coordinates of chosen', color_chCh, 'checker are:', h_chCh, v_chCh,
-      '\nThis checker is queen:', isQ_chCh,'\nThis checker can beat:', canB_chCh);
+      '\nThis checker is queen:', isQ_chCh);
     }
     else {
       console.log('2'); //вывод в консоль
@@ -264,19 +262,14 @@ function beat_move_not_Q_check(OurCH, EnCH, checker) {
   var enemy_check = []; //вспомогательный список полей с потеницальной шашкой оппонента
   var brfl = false; //вспомогательный флаг удаления записи из список
   //изначально записываем все возможные ударные ходы шашки и поля с потеницальной шашкой врага:
-  if (checker.color == "white") {
-    beat_moves[0] = { horiz: checker.horiz+2, vertic: checker.vertic+2 };
-    beat_moves[1] = { horiz: checker.horiz+2, vertic: checker.vertic-2 };
-    enemy_check[0] = { horiz: checker.horiz+1, vertic: checker.vertic+1 };
-    enemy_check[1] = { horiz: checker.horiz+1, vertic: checker.vertic-1 };
-  }
-  else 
-  if (checker.color == "black") {
-    beat_moves[0] = { horiz: checker.horiz-2, vertic: checker.vertic+2 };
-    beat_moves[1] = { horiz: checker.horiz-2, vertic: checker.vertic-2 };
-    enemy_check[0] = { horiz: checker.horiz-1, vertic: checker.vertic+1 };
-    enemy_check[1] = { horiz: checker.horiz-1, vertic: checker.vertic-1 };
-  }
+  beat_moves[0] = { horiz: checker.horiz+2, vertic: checker.vertic+2 };
+  beat_moves[1] = { horiz: checker.horiz+2, vertic: checker.vertic-2 };
+  beat_moves[2] = { horiz: checker.horiz-2, vertic: checker.vertic+2 };
+  beat_moves[3] = { horiz: checker.horiz-2, vertic: checker.vertic-2 };
+  enemy_check[0] = { horiz: checker.horiz+1, vertic: checker.vertic+1 };
+  enemy_check[1] = { horiz: checker.horiz+1, vertic: checker.vertic-1 };
+  enemy_check[2] = { horiz: checker.horiz-1, vertic: checker.vertic+1 };
+  enemy_check[3] = { horiz: checker.horiz-1, vertic: checker.vertic-1 };
   //теперь удалим из списка те ходы, которые ограничены:
   for (var i = 0; i < beat_moves.length; i++) { 
     //сначала проверим на выход за границы игровой доски:
@@ -315,7 +308,7 @@ function beat_move_not_Q_check(OurCH, EnCH, checker) {
       brfl = false;
     }
   }
-  console.log('Potential enemy checkers:', enemy_check);
+  //console.log('Potential enemy checkers:', enemy_check);
   return beat_moves;
 }
 
@@ -568,7 +561,7 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
       count++;
     }
   }
-  console.log('Potential enemy checkers:', enemy_check);
+  //console.log('Potential enemy checkers:', enemy_check);
   return beat_moves;
 }
 
@@ -713,9 +706,8 @@ app.post('/checker_chosen', (req, res) => {
   res.status(200).json(moves); //отправка списка доступных ходов клиенту
 });
 
-
+//Пост запрос на перемещение выбранной шашки в выбранные координаты
 app.post('/move', (req, res) => {
-  var movedChecker = chosen_ch; //предварительные данные о шашке после перемещения
   var active_color = []; //массив шашек текущего игрока
   var inactive_color = []; //массив шашек другого игрока
   var moves = []; //массив доступных ходов выбранной шашки
@@ -760,27 +752,25 @@ app.post('/move', (req, res) => {
           //если валидация пройдена, то шашка перемещается на новые координаты:
           active_color[i].horiz = new_h_Ch;
           active_color[i].vertic = new_v_Ch;
-          movedChecker.horiz = new_h_Ch;
-          movedChecker.vertic = new_v_Ch;
           //проверка на то, дошла или шашка до последней горизонтали
-          var Qfl = can_turn_Q_check(movedChecker.color, movedChecker);
+          var Qfl = can_turn_Q_check(active_color[i].color, active_color[i]);
           //если да, то она сразу превращается в дамку
-          if (Qfl) movedChecker.isQueen = true;
-          console.log('Parameters of moved checker:', JSON.stringify(movedChecker));
+          if (Qfl) active_color[i].isQueen = true;
+          //console.log('Parameters of moved checker:', JSON.stringify(movedChecker));
           //если это ударный ход, то шашка оппонента становится побитой
           if (BeatFlag == true)
             inactive_color = beating(chosen_ch, move_ch, inactive_color);
           //console.log('Enemy checkers after beating move:', inactive_color);
           //далее создаем обнавленные данные об игровой доске:
           if (color_chCh == "white") {
-            checkers_ch = {
+            checkers = {
               white: active_color,
               black: inactive_color
             }
           }
           else 
           if (color_chCh == "black") {
-            checkers_ch = {
+            checkers = {
               white: inactive_color,
               black: active_color
             }
@@ -793,7 +783,7 @@ app.post('/move', (req, res) => {
           //Вернуть статус-код выполнения задачи
           statuscode = ({ status: "ok" });
           res.status(200).send(statuscode);
-          //console.log(checkers_ch);
+          console.log('List of all checkers after move:', JSON.stringify(checkers));
           return;
         }
         else {
@@ -808,6 +798,59 @@ app.post('/move', (req, res) => {
   //Вернуть статус-код ошибки выполнения задачи
   statuscode = ({ status: "error: no such checker" });
   res.status(400).send(statuscode);
+});
+
+//Пост запрос на выполнение ряда действий после совершения хода игроком
+app.post('/after_move', (req, res) => {
+  var movedChecker = []; //данные о пермещенной шашке
+  var active_color = []; //массив шашек текущего игрока
+  var inactive_color = []; //массив шашек другого игрока
+  var addit_moves = []; //массив доступных ходов выбранной шашки
+  var statuscode; //статус код, который будет отправлен в ответ к серверу
+  //Валидация цвета
+  if (color_chCh == "white") {
+    active_color = checkers.white; //запись всех элементов с цветом white в первый массив
+    inactive_color = checkers.black; //black во второй массив
+  }
+  else if (color_chCh == "black") {
+    active_color = checkers.black; //тут все наоборот
+    inactive_color = checkers.white;
+  }
+  else {
+    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+    res.status(400).send(statuscode);
+    return;
+  }
+  //Проверим, какое дальше действие должно произойти
+  //Если ход был ударный, то...
+  if (BeatFlag == true) {
+    //сначала создадим данные о перемещенной шашке:
+    movedChecker.color = color_chCh;
+    movedChecker.horiz = new_h_Ch;
+    movedChecker.vertic = new_v_Ch;
+    movedChecker.isQueen = isQ_chCh;
+    var Qfl = can_turn_Q_check(movedChecker.color, movedChecker);
+    if (Qfl) movedChecker.isQueen = true;
+    //Далее предпринимается попытка составить список следующих ударных ходов
+    addit_moves = addit_beat_move_check(active_color, inactive_color, movedChecker);
+    //Если доп ходы нашлись, то их список отправляется игроку
+    if (addit_moves.length > 0) {
+      console.log('Additional available moves of this checker are:\n', addit_moves);
+      res.status(200).json(addit_moves); //отправка списка доступных ходов клиенту
+    }
+    //Если же нет, то ход игрока завершается
+    else {
+      statuscode = { status: "End of turn!" }; //вывод сообщения о завершении хода
+      res.status(200).send(statuscode);
+      return;
+    }
+  }
+  //Если же ход был простой, то он сразу же завершается
+  else {
+    statuscode = { status: "End of turn!" }; //вывод сообщения о завершении хода
+    res.status(200).send(statuscode);
+    return;
+  }
 });
 
 app.listen(port, () => { //клиент запущен
