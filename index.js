@@ -2,14 +2,15 @@ const e = require('express');
 const express = require('express'); //подключение нужных библиотек
 const XMLHttpRequest = require('xhr2');
 
-const hostname = '127.0.0.1'; //хост
-const port = 4000; //номер порта клиента
+const hostname = '127.0.0.1'; //хост //85.143.223.149
+const port = 4000; //номер порта клиента //2020
+
 var checkers; //json пришедший с сервера
 var BeatFlag = false; //флаг возможности нанести ударный ход
+
 var chosen_ch; //json с выбранной шашкей
 var move_ch; //json с координатами перемещения
-var color_chCh, h_chCh, v_chCh, isQ_chCh; //параметры выбранной шашки
-var new_h_Ch, new_v_Ch; //координаты перемещения
+
 const app = express();
 app.use(express.json());
 
@@ -49,13 +50,9 @@ app.get('/chosen_checker', (req, res) => {
       console.log('1'); //вывод в консоль
       chosen_ch = JSON.parse(req_chos_ch.response); //запись в переменную ответ с сервера
       res.status(200).json(chosen_ch); //ну тут статус код
-      //параметры выбранной шашки:
-      color_chCh = chosen_ch.color; 
-      h_chCh = chosen_ch.horiz;
-      v_chCh = chosen_ch.vertic;
-      isQ_chCh = chosen_ch.isQueen;
-      console.log('Coordinates of chosen', color_chCh, 'checker are:', h_chCh, v_chCh,
-      '\nThis checker is queen:', isQ_chCh);
+      console.log('Coordinates of chosen', chosen_ch.color, 
+      'checker are:', chosen_ch.horiz, chosen_ch.vertic,
+      '\nThis checker is queen:', chosen_ch.isQueen);
     }
     else {
       console.log('2'); //вывод в консоль
@@ -83,9 +80,7 @@ app.get('/checker_movement', (req, res) => {
       move_ch = JSON.parse(req_coord_ch.response); //запись в переменную ответ с сервера
       res.status(200).json(move_ch); //ну тут статус код
       //параметры выбранной шашки: 
-      new_h_Ch = move_ch.horiz;
-      new_v_Ch = move_ch.vertic;
-      console.log('New coordinates are:', new_h_Ch, new_v_Ch);
+      console.log('New coordinates are:', move_ch.horiz, move_ch.vertic);
     }
     else {
       //console.log('2'); //вывод в консоль
@@ -322,7 +317,7 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
   var brfl = false; //вспомогательный флаг прерывания записи в список
   var enfl = false; //флаг нахождения шашки оппонента
   var count = 0; //номер в списке ходов
-  var countEn = 0; //номер в списке полей с шашкорй оппонента
+  var countEn = 0; //номер в списке полей с шашкой оппонента
   //будем искать ударные ходы во всех 4 направлениях:
   //вниз-влево:
   for (var k = 0; k < 8; k++) { //будем считать до 8, так как это максимум на доске
@@ -645,11 +640,11 @@ app.post('/turn_begin', (req, res) => {
   var statuscode; //статус код, который будет отправлен в ответ к серверу
   //Валидация цвета
 //-------------------ВАЖНО!!!!-->vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  if (color_chCh == "white") { //ЦВЕТ ДОЛЖЕН ПРОВЕРЯТСЯ ПО ЦВЕТУ ИГРОКА А НЕ ПО ЦВЕТУ ВЫБРАННОЙ ШАШКИ
+  if (chosen_ch.color == "white") { //ЦВЕТ ДОЛЖЕН ПРОВЕРЯТСЯ ПО ЦВЕТУ ИГРОКА А НЕ ПО ЦВЕТУ ВЫБРАННОЙ ШАШКИ
     active_color = checkers.white; //запись всех элементов с цветом white в первый массив
     inactive_color = checkers.black; //black во второй массив
   }
-  else if (color_chCh == "black") {
+  else if (chosen_ch.color == "black") {
     active_color = checkers.black; //тут все наоборот
     inactive_color = checkers.white;
   }
@@ -681,11 +676,11 @@ app.post('/checker_chosen', (req, res) => {
   var moves = []; //массив доступных ходов выбранной шашки
   var statuscode; //статус код, который будет отправлен в ответ к серверу
   //Валидация цвета
-  if (color_chCh == "white") {
+  if (chosen_ch.color == "white") {
     active_color = checkers.white; //запись всех элементов с цветом white в первый массив
     inactive_color = checkers.black; //black во второй массив
   }
-  else if (color_chCh == "black") {
+  else if (chosen_ch.color == "black") {
     active_color = checkers.black; //тут все наоборот
     inactive_color = checkers.white;
   }
@@ -697,11 +692,11 @@ app.post('/checker_chosen', (req, res) => {
 
   //Составление списка доступных тихих или ударных ходов выбранной шашки:
   if (BeatFlag == true) {
-    if (isQ_chCh == true) moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
+    if (chosen_ch.isQueen == true) moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
     else moves = beat_move_not_Q_check(active_color, inactive_color, chosen_ch);
   }
   else {
-    if (isQ_chCh == true) moves = reg_move_Q_check(active_color, inactive_color, chosen_ch);
+    if (chosen_ch.isQueen == true) moves = reg_move_Q_check(active_color, inactive_color, chosen_ch);
     else moves = reg_move_not_Q_check(active_color, inactive_color, chosen_ch);
   }
 
@@ -716,11 +711,11 @@ app.post('/move', (req, res) => {
   var moves = []; //массив доступных ходов выбранной шашки
   var statuscode; //статус код, который будет отправлен в ответ к серверу
   //Валидация цвета
-  if (color_chCh == "white") {
+  if (chosen_ch.color == "white") {
     active_color = checkers.white; //запись всех элементов с цветом white в первый массив
     inactive_color = checkers.black; //black во второй массив
   }
-  else if (color_chCh == "black") {
+  else if (chosen_ch.color == "black") {
     active_color = checkers.black; //тут все наоборот
     inactive_color = checkers.white;
   }
@@ -732,29 +727,29 @@ app.post('/move', (req, res) => {
 
   //Составление списка доступных тихих или ударных ходов выбранной шашки:
   if (BeatFlag == true) {
-    if (isQ_chCh == true) moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
+    if (chosen_ch.isQueen == true) moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
     else moves = beat_move_not_Q_check(active_color, inactive_color, chosen_ch);
   }
   else {
-    if (isQ_chCh == true) moves = reg_move_Q_check(active_color, inactive_color, chosen_ch);
+    if (chosen_ch.isQueen == true) moves = reg_move_Q_check(active_color, inactive_color, chosen_ch);
     else moves = reg_move_not_Q_check(active_color, inactive_color, chosen_ch);
   }
 
   //Ищем шашку и меняем параметры
   for (var i = 0; i < active_color.length; i++) {
-    if (active_color[i].horiz == h_chCh)
-      if (active_color[i].vertic == v_chCh) 
+    if (active_color[i].horiz == chosen_ch.horiz)
+      if (active_color[i].vertic == chosen_ch.vertic) 
       {
         //Функция валидации хода
         var valid_move = false; //false - ход запрещен, true - ход разрешен
         for (var j = 0; j < moves.length; j++)
-          if (moves[j].horiz == new_h_Ch)
-            if (moves[j].vertic == new_v_Ch)
+          if (moves[j].horiz == move_ch.horiz)
+            if (moves[j].vertic == move_ch.vertic)
             valid_move = true;
         if (valid_move == true) {
           //если валидация пройдена, то шашка перемещается на новые координаты:
-          active_color[i].horiz = new_h_Ch;
-          active_color[i].vertic = new_v_Ch;
+          active_color[i].horiz = move_ch.horiz;
+          active_color[i].vertic = move_ch.vertic;
           //проверка на то, дошла или шашка до последней горизонтали
           var Qfl = can_turn_Q_check(active_color[i].color, active_color[i]);
           //если да, то она сразу превращается в дамку
@@ -765,14 +760,14 @@ app.post('/move', (req, res) => {
             inactive_color = beating(chosen_ch, move_ch, inactive_color);
           //console.log('Enemy checkers after beating move:', inactive_color);
           //далее создаем обнавленные данные об игровой доске:
-          if (color_chCh == "white") {
+          if (chosen_ch.color == "white") {
             checkers = {
               white: active_color,
               black: inactive_color
             }
           }
           else 
-          if (color_chCh == "black") {
+          if (chosen_ch.color == "black") {
             checkers = {
               white: inactive_color,
               black: active_color
@@ -811,11 +806,11 @@ app.post('/after_move', (req, res) => {
   var addit_moves = []; //массив доступных ходов выбранной шашки
   var statuscode; //статус код, который будет отправлен в ответ к серверу
   //Валидация цвета
-  if (color_chCh == "white") {
+  if (chosen_ch.color == "white") {
     active_color = checkers.white; //запись всех элементов с цветом white в первый массив
     inactive_color = checkers.black; //black во второй массив
   }
-  else if (color_chCh == "black") {
+  else if (chosen_ch.color == "black") {
     active_color = checkers.black; //тут все наоборот
     inactive_color = checkers.white;
   }
@@ -828,10 +823,10 @@ app.post('/after_move', (req, res) => {
   //Если ход был ударный, то...
   if (BeatFlag == true) {
     //сначала создадим данные о перемещенной шашке:
-    movedChecker.color = color_chCh;
-    movedChecker.horiz = new_h_Ch;
-    movedChecker.vertic = new_v_Ch;
-    movedChecker.isQueen = isQ_chCh;
+    movedChecker.color = chosen_ch.color;
+    movedChecker.horiz = move_ch.horiz;
+    movedChecker.vertic = move_ch.vertic;
+    movedChecker.isQueen = chosen_ch.isQueen;
     var Qfl = can_turn_Q_check(movedChecker.color, movedChecker);
     if (Qfl) movedChecker.isQueen = true;
     //Далее предпринимается попытка составить список следующих ударных ходов
