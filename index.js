@@ -284,8 +284,11 @@ function beat_move_not_Q_check(OurCH, EnCH, checker) {
     for (var j = 0; j < EnCH.length; j++) 
       if (EnCH[j].horiz == enemy_check[i].horiz)
         if (EnCH[j].vertic == enemy_check[i].vertic) {
-          brfl = false;
-          break;
+          //убедимся, что эта шашка не является уже побитой
+          if (EnCH[j].isBeaten == false) {
+            brfl = false;
+            break;
+          }
         }
     //после проверим свободно ли поле, на которое перемещается шашка:
     //есть ли в полях союзные шашки?:
