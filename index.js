@@ -2,39 +2,182 @@ const e = require('express');
 const express = require('express'); //подключение нужных библиотек
 const XMLHttpRequest = require('xhr2');
 
-const hostname = '127.0.0.1'; //хост //85.143.223.149
-const port = 4000; //номер порта клиента //2020
+const hostname = '127.0.0.1'; //хост
+const port = 80; //номер порта клиента
 
-var checkers; //json пришедший с сервера
-var BeatFlag = false; //флаг возможности нанести ударный ход
+const server_ip_address = "85.143.223.149" //ip сервера БД
+const server_port = 2020 //порт сервера БД
 
-var chosen_ch; //json с выбранной шашкей
-var move_ch; //json с координатами перемещения
+//var checkers; //json пришедший с сервера
+//var BeatFlag = false; //флаг возможности нанести ударный ход
+
+//var chosen_ch; //json с выбранной шашкой
+//var move_ch; //json с координатами перемещения //совместить с chosen_ch для /move
 
 const app = express();
 app.use(express.json());
 
-//При отправлении гет запроса мы получаем данные ./checkers.json с сервера
-app.get('/', (req, res) => {
-
+/*//При отправлении гет запроса мы получаем данные ./checkers.json с сервера
+app.get('/session_checkers', (req, res) => {
     const json = JSON.stringify({}); //сначала создаем по сути пустой json
 
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
 
+    //request.open("POST", `http://${server_ip_address}:${server_port}/SessionСheckers`); //гет запрос на сервер
     request.open("GET", 'http://localhost:3000/'); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
-
-    request.send(json); //хз
+    request.send(json);
 
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
         //console.log(request.response); //вывод в консоль
         checkers = JSON.parse(request.response); //запись в переменную ответ с сервера
         res.status(200).json(checkers); //ну тут статус код
     }
-})
+})*/
+
+//получение полного списка шашек
+function extractCheckers(req, callback) { //extractCheckers(req, function(checkers) {...})
+try { //валидация успешна
+  console.log('extractCheckers_ok'); //вывод в консоль
+  var cur_ses = req.body.current_session;
+  var json = JSON.stringify({"current_session": cur_ses});
+  const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+  //request.open("POST", `http://${server_ip_address}:${server_port}/SessionСheckers`); //гет запрос на сервер
+  request.open("POST", `http://localhost:3000/`); //гет запрос на сервер
+  request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+  request.send(json); //хз
+  request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+      //console.log(request.response); //вывод в консоль
+      var checkers = JSON.parse(request.response); //запись в переменную ответ с сервера
+      callback(checkers); 
+  }
+}
+catch {
+  console.log('extractCheckers_err'); //вывод в консоль
+  return 0; //подозрительное преобразование типов
+}
+}
+
+//получение полного списка шашек
+function extractActiveColor(req, callback) { //extractActiveColor(req, function(active_color) {...})
+  try { //валидация успешна
+    console.log('extractActiveColor_ok'); //вывод в консоль
+    var cur_ses = req.body.current_session;
+    var json = JSON.stringify({"current_session": cur_ses});
+    const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+    //request.open("POST", `http://${server_ip_address}:${server_port}/GetActiveColor`); //гет запрос на сервер
+    request.open("POST", `http://localhost:3000/GetActiveColor`); //гет запрос на сервер
+    request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+    request.send(json); //хз
+    request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+        //console.log(request.response); //вывод в консоль
+        var active_color = JSON.parse(request.response); //запись в переменную ответ с сервера
+        callback(active_color.active_color); 
+    }
+  }
+  catch {
+    console.log('extractActiveColor_err'); //вывод в консоль
+    return 0; //подозрительное преобразование типов
+  }
+}
+
+//получение флага ударного хода
+function extractBeatFlag(req, callback) { //extractBeatFlag(req, function(BeatFlag) {...})
+  try { //валидация успешна
+    console.log('extractBeatFlag_ok'); //вывод в консоль
+    var cur_ses = req.body.current_session;
+    var json = JSON.stringify({"current_session": cur_ses});
+    const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+    //request.open("POST", `http://${server_ip_address}:${server_port}/GetBeatFlag`); //гет запрос на сервер
+    request.open("POST", `http://localhost:3000/GetBeatFlag`); //гет запрос на сервер
+    request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+    request.send(json); //хз
+    request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+        //console.log(request.response); //вывод в консоль
+        var BeatFlag = JSON.parse(request.response); //запись в переменную ответ с сервера
+        callback(BeatFlag.beat_flag); 
+    }
+  }
+  catch {
+    console.log('extractBeatFlag_err'); //вывод в консоль
+    return 0; //подозрительное преобразование типов
+  }
+}
+
+//установка флага ударного хода
+function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, function(callback) {...})
+  try { //валидация успешна
+    console.log('SetBeatFlag_ok'); //вывод в консоль
+    var cur_ses = req.body.current_session;
+    var json = JSON.stringify({"current_session": cur_ses, "BeatFlag": BeatFlag});
+    const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+    //request.open("POST", `http://${server_ip_address}:${server_port}/SetBeatFlag`); //гет запрос на сервер
+    request.open("POST", `http://localhost:3000/SetBeatFlag`); //гет запрос на сервер
+    request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+    request.send(json); //хз
+    request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+        //console.log(request.response); //вывод в консоль
+        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+        callback(statuscode); 
+    }
+  }
+  catch {
+    console.log('SetBeatFlag_err'); //вывод в консоль
+    return 0; //подозрительное преобразование типов
+  }
+}
+
+//обновление списка шашек
+function UpdateCheckersField(req, checkers, callback) {
+//UpdateCheckersField(req, checkers, function(callback) {...})
+  try { //валидация успешна
+    console.log('SetBeatFlag_ok'); //вывод в консоль
+    var cur_ses = req.body.current_session;
+    var json = JSON.stringify({"current_session": cur_ses, "white": checkers.white, 
+                "black": checkers.black});
+    const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+    //request.open("POST", `http://${server_ip_address}:${server_port}/UpdateCheckersField`); //гет запрос на сервер
+    request.open("POST", `http://localhost:3000/UpdateCheckersField`); //гет запрос на сервер
+    request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+    request.send(json); //хз
+    request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+        //console.log(request.response); //вывод в консоль
+        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+        callback(statuscode); 
+    }
+  }
+  catch {
+    console.log('SetBeatFlag_err'); //вывод в консоль
+    return 0; //подозрительное преобразование типов
+  }
+}
+
+//установка флага ударного хода
+function SetActiveColor(req, color, callback) { //SetActiveColor(req, BeatFlag, function(callback) {...})
+  try { //валидация успешна
+    console.log('SetBeatFlag_ok'); //вывод в консоль
+    var cur_ses = req.body.current_session;
+    var json = JSON.stringify({"current_session": cur_ses, "active_color": color});
+    const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+    //request.open("POST", `http://${server_ip_address}:${server_port}/SetActiveColor`); //гет запрос на сервер
+    request.open("POST", `http://localhost:3000/SetActiveColor`); //гет запрос на сервер
+    request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+    request.send(json); //хз
+    request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+        //console.log(request.response); //вывод в консоль
+        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+        callback(statuscode); 
+    }
+  }
+  catch {
+    console.log('SetBeatFlag_err'); //вывод в консоль
+    return 0; //подозрительное преобразование типов
+  }
+}
+
 
 //получение координат шашки, которой будут ходить
-app.get('/chosen_checker', (req, res) => {
+/*app.get('/chosen_checker', (req, res) => {
   const json = JSON.stringify({}); //создаем пустой json
 
   const req_chos_ch = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -60,10 +203,33 @@ app.get('/chosen_checker', (req, res) => {
       return;
     }  
   }
-});
+});*/
+
+//получение данные о шашке, которой будут ходить
+function extractChosenCh(req) { //var chosen_ch = extractChosenCh(req);
+  try {
+    console.log('extractChosenCh_1'); //вывод в консоль
+    var full_user_input = req.body; //запись в переменную ответ с сервера
+    //параметры выбранной шашки:
+    color_chCh = full_user_input.color;
+    h_chCh = full_user_input.horiz;
+    v_chCh = full_user_input.vertic;
+    isQ_chCh = full_user_input.isQueen;
+    console.log('Coordinates of chosen', color_chCh, 'checker are:', h_chCh, v_chCh,
+                '\nThis checker is queen:', isQ_chCh);
+    return JSON.parse(
+            JSON.stringify(
+                    {"color": color_chCh, "horiz": h_chCh, "vertic": v_chCh, "isQueen": isQ_chCh}
+                    ));
+  }
+  catch {
+      console.log('extractChosenCh_2'); //вывод в консоль
+      return 0; //подозрительное преобразование типов
+  }
+}
 
 //получение координат перемещения текущей шашки
-app.get('/checker_movement', (req, res) => {
+/*app.get('/checker_movement', (req, res) => {
   const json = JSON.stringify({}); //создаем пустой json
 
   const req_coord_ch = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -88,7 +254,25 @@ app.get('/checker_movement', (req, res) => {
       return;
     }  
   }
-});
+});*/
+
+//получение координат перемещения шашки
+function extractCheckerMovement(req) { //var move_ch = extractCheckerMovement(req);
+  try {
+    console.log('extractChosenCh_1'); //вывод в консоль
+    var full_user_input = req.body; //запись в переменную ответ с сервера
+    //параметры выбранной шашки: 
+    new_h_Ch = full_user_input.new_horiz;
+    new_v_Ch = full_user_input.new_vertic;
+    console.log('New coordinates are:', new_h_Ch, new_v_Ch);
+    return JSON.parse(
+            JSON.stringify({"new_horiz": new_h_Ch, "new_vertic": new_v_Ch}));
+  }
+  catch {
+      console.log('extractChosenCh_2'); //вывод в консоль
+      return 0; //подозрительное преобразование типов
+  }
+}
 
 //набор функций, которые будут использоваться для различных проверок:
 //проверка доступности тихого хода простой шашки:
@@ -579,23 +763,23 @@ function beating(checker, move, enemy_checkers) {
   var h1, h2, v1, v2;
   var c = 0; //вспомогательный счетчик для определения направления
   //сначала зададим конечные координаты для горизонтали и вертикали
-  if (checker.horiz > move.horiz) {
-    h1 = move.horiz+1; //h1 всегда нижняя горизонталь
+  if (checker.horiz > move.new_horiz) {
+    h1 = move.new_horiz+1; //h1 всегда нижняя горизонталь
     h2 = checker.horiz-1; //h2 - верхняя
     c++;
   }
   else {
     h1 = checker.horiz+1;
-    h2 = move.horiz-1;
+    h2 = move.new_horiz-1;
   }
-  if (checker.vertic > move.vertic) {
-    v1 = move.vertic+1; //v1 всегда левая вертикаль
+  if (checker.vertic > move.new_vertic) {
+    v1 = move.new_vertic+1; //v1 всегда левая вертикаль
     v2 = checker.vertic-1; //v2 - правая
     c++;
   }
   else {
     v1 = checker.vertic+1;
-    v2 = move.vertic-1;
+    v2 = move.new_vertic-1;
   }
   //теперь в цикле будем искать координаты шашки оппонента в пределах этих границ пошагово
   for (var h_comp = h1; h_comp < h2+1; h_comp++) {
@@ -633,222 +817,256 @@ function addit_beat_move_check(OurCH, EnCH, movedChecker) {
 
 
 //пост запрос в начале хода для различных проверок
-app.post('/turn_begin', (req, res) => {
-  active_color = []; //массив шашек текущего игрока
-  inactive_color = []; //массив шашек другого игрока
-  moves = []; //массив доступных ходов выбранной шашки
-  var statuscode; //статус код, который будет отправлен в ответ к серверу
-  //Валидация цвета
-//-------------------ВАЖНО!!!!-->vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  if (chosen_ch.color == "white") { //ЦВЕТ ДОЛЖЕН ПРОВЕРЯТСЯ ПО ЦВЕТУ ИГРОКА А НЕ ПО ЦВЕТУ ВЫБРАННОЙ ШАШКИ
-    active_color = checkers.white; //запись всех элементов с цветом white в первый массив
-    inactive_color = checkers.black; //black во второй массив
-  }
-  else if (chosen_ch.color == "black") {
-    active_color = checkers.black; //тут все наоборот
-    inactive_color = checkers.white;
-  }
-  else {
-    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
-    res.status(400).send(statuscode);
-    return;
-  }
-  //проверка на возможность игроком нанести ударный ход
-  for (var i = 0; i < active_color.length; i++) {
-    if (active_color[i].isQueen == true) 
-      moves = beat_move_Q_check(active_color, inactive_color, active_color[i]);
-    else moves = beat_move_not_Q_check(active_color, inactive_color, active_color[i]);
-    if (moves.length > 0) {
-      BeatFlag = true;
-      break;
-    }
-  }
-  console.log('Player can make a beat move?:', BeatFlag);
-  statuscode = ({ status: "ok" });
-  res.status(200).send(statuscode);
-  return;
+app.post('/ru_turn_begin', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    extractActiveColor(req, function(active_color) {
+      active_Ch = []; //массив шашек текущего игрока
+      inactive_Ch = []; //массив шашек другого игрока
+      moves = []; //массив доступных ходов выбранной шашки
+      var statuscode; //статус код, который будет отправлен в ответ к серверу
+      var BeatFlag = false; //флаг возможности нанести ударный ход
+      //Валидация цвета
+      if (active_color == "white") {
+        active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+        inactive_Ch = checkers.black; //black во второй массив
+      }
+      else if (active_color == "black") {
+        active_Ch = checkers.black; //тут все наоборот
+        inactive_Ch = checkers.white;
+      }
+      else {
+        statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+        res.status(400).send(statuscode);
+        return;
+      }
+      //проверка на возможность игроком нанести ударный ход
+      for (var i = 0; i < active_Ch.length; i++) {
+        if (active_Ch[i].isQueen == true) 
+          moves = beat_move_Q_check(active_Ch, inactive_Ch, active_Ch[i]);
+        else moves = beat_move_not_Q_check(active_Ch, inactive_Ch, active_Ch[i]);
+        if (moves.length > 0) {
+          BeatFlag = true;
+          break;
+        }
+      }
+      console.log('Player can make a beat move?:', BeatFlag);
+      SetBeatFlag(req, BeatFlag, function(statuscode) {
+        res.status(200).send(statuscode);
+        return;
+      })
+    })
+  })
 })
 
 //Пост запрос на вывод списка доступных ходов при пришедших данных о выбранной шашке
-app.post('/checker_chosen', (req, res) => {
-  var active_color = []; //массив шашек текущего игрока
-  var inactive_color = []; //массив шашек другого игрока
-  var moves = []; //массив доступных ходов выбранной шашки
-  var statuscode; //статус код, который будет отправлен в ответ к серверу
-  //Валидация цвета
-  if (chosen_ch.color == "white") {
-    active_color = checkers.white; //запись всех элементов с цветом white в первый массив
-    inactive_color = checkers.black; //black во второй массив
-  }
-  else if (chosen_ch.color == "black") {
-    active_color = checkers.black; //тут все наоборот
-    inactive_color = checkers.white;
-  }
-  else {
-    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
-    res.status(400).send(statuscode);
-    return;
-  }
-
-  //Составление списка доступных тихих или ударных ходов выбранной шашки:
-  if (BeatFlag == true) {
-    if (chosen_ch.isQueen == true) moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
-    else moves = beat_move_not_Q_check(active_color, inactive_color, chosen_ch);
-  }
-  else {
-    if (chosen_ch.isQueen == true) moves = reg_move_Q_check(active_color, inactive_color, chosen_ch);
-    else moves = reg_move_not_Q_check(active_color, inactive_color, chosen_ch);
-  }
-
-  console.log('Available moves of this checker are:\n', moves); //вывод списка ходов в консоль
-  res.status(200).json(moves); //отправка списка доступных ходов клиенту
-});
-
-//Пост запрос на перемещение выбранной шашки в выбранные координаты
-app.post('/move', (req, res) => {
-  var active_color = []; //массив шашек текущего игрока
-  var inactive_color = []; //массив шашек другого игрока
-  var moves = []; //массив доступных ходов выбранной шашки
-  var statuscode; //статус код, который будет отправлен в ответ к серверу
-  //Валидация цвета
-  if (chosen_ch.color == "white") {
-    active_color = checkers.white; //запись всех элементов с цветом white в первый массив
-    inactive_color = checkers.black; //black во второй массив
-  }
-  else if (chosen_ch.color == "black") {
-    active_color = checkers.black; //тут все наоборот
-    inactive_color = checkers.white;
-  }
-  else {
-    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
-    res.status(400).send(statuscode);
-    return;
-  }
-
-  //Составление списка доступных тихих или ударных ходов выбранной шашки:
-  if (BeatFlag == true) {
-    if (chosen_ch.isQueen == true) moves = beat_move_Q_check(active_color, inactive_color, chosen_ch);
-    else moves = beat_move_not_Q_check(active_color, inactive_color, chosen_ch);
-  }
-  else {
-    if (chosen_ch.isQueen == true) moves = reg_move_Q_check(active_color, inactive_color, chosen_ch);
-    else moves = reg_move_not_Q_check(active_color, inactive_color, chosen_ch);
-  }
-
-  //Ищем шашку и меняем параметры
-  for (var i = 0; i < active_color.length; i++) {
-    if (active_color[i].horiz == chosen_ch.horiz)
-      if (active_color[i].vertic == chosen_ch.vertic) 
-      {
-        //Функция валидации хода
-        var valid_move = false; //false - ход запрещен, true - ход разрешен
-        for (var j = 0; j < moves.length; j++)
-          if (moves[j].horiz == move_ch.horiz)
-            if (moves[j].vertic == move_ch.vertic)
-            valid_move = true;
-        if (valid_move == true) {
-          //если валидация пройдена, то шашка перемещается на новые координаты:
-          active_color[i].horiz = move_ch.horiz;
-          active_color[i].vertic = move_ch.vertic;
-          //проверка на то, дошла или шашка до последней горизонтали
-          var Qfl = can_turn_Q_check(active_color[i].color, active_color[i]);
-          //если да, то она сразу превращается в дамку
-          if (Qfl) active_color[i].isQueen = true;
-          //console.log('Parameters of moved checker:', JSON.stringify(movedChecker));
-          //если это ударный ход, то шашка оппонента становится побитой
-          if (BeatFlag == true)
-            inactive_color = beating(chosen_ch, move_ch, inactive_color);
-          //console.log('Enemy checkers after beating move:', inactive_color);
-          //далее создаем обнавленные данные об игровой доске:
-          if (chosen_ch.color == "white") {
-            checkers = {
-              white: active_color,
-              black: inactive_color
-            }
-          }
-          else 
-          if (chosen_ch.color == "black") {
-            checkers = {
-              white: inactive_color,
-              black: active_color
-            }
-          }
-          else {
-            statuscode = { status: "error: invalid color" }; //вывод ошибки если цвет неправильный
-            res.status(400).send(statuscode);
-            return;
-          }
-          //Вернуть статус-код выполнения задачи
-          statuscode = ({ status: "ok" });
-          res.status(200).send(statuscode);
-          console.log('List of all checkers after move:', JSON.stringify(checkers));
-          return;
+app.post('/ru_available_moves', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    var chosen_ch = extractChosenCh(req);
+    extractActiveColor(req, function(active_color) {
+      extractBeatFlag(req, function(BeatFlag) {
+        var active_Ch = []; //массив шашек текущего игрока
+        var inactive_Ch = []; //массив шашек другого игрока
+        var moves = []; //массив доступных ходов выбранной шашки
+        var statuscode; //статус код, который будет отправлен в ответ к серверу
+        //Валидация цвета
+        if (active_color == "white") {
+          active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+          inactive_Ch = checkers.black; //black во второй массив
+        }
+        else if (active_color == "black") {
+          active_Ch = checkers.black; //тут все наоборот
+          inactive_Ch = checkers.white;
         }
         else {
-          //console.log(' After: No changes');
-          //Вернуть статус-код ошибки выбора новых координат
-          statuscode = ({ status: "error: this move is not valid" });
+          statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
           res.status(400).send(statuscode);
           return;
         }
-      }
-  }
-  //Вернуть статус-код ошибки выполнения задачи
-  statuscode = ({ status: "error: no such checker" });
-  res.status(400).send(statuscode);
+
+        //Составление списка доступных тихих или ударных ходов выбранной шашки:
+        if (BeatFlag == true) {
+          if (chosen_ch.isQueen == true) moves = beat_move_Q_check(active_Ch, inactive_Ch, chosen_ch);
+          else moves = beat_move_not_Q_check(active_Ch, inactive_Ch, chosen_ch);
+        }
+        else {
+          if (chosen_ch.isQueen == true) moves = reg_move_Q_check(active_Ch, inactive_Ch, chosen_ch);
+          else moves = reg_move_not_Q_check(active_Ch, inactive_Ch, chosen_ch);
+        }
+
+        console.log('Available moves of this checker are:\n', moves); //вывод списка ходов в консоль
+        res.status(200).json(moves); //отправка списка доступных ходов клиенту
+      })
+    })
+  })
+});
+
+//Пост запрос на перемещение выбранной шашки в выбранные координаты
+app.post('/ru_move', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    var chosen_ch = extractChosenCh(req);
+    var move_ch = extractCheckerMovement(req);
+    extractActiveColor(req, function(active_color) {
+      extractBeatFlag(req, function(BeatFlag) {
+        var active_Ch = []; //массив шашек текущего игрока
+        var inactive_Ch = []; //массив шашек другого игрока
+        var moves = []; //массив доступных ходов выбранной шашки
+        var statuscode; //статус код, который будет отправлен в ответ к серверу
+        var comp_flag = false; //флаг выполнения задачи
+        //Валидация цвета
+        if (active_color == "white") {
+          active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+          inactive_Ch = checkers.black; //black во второй массив
+        }
+        else if (active_color == "black") {
+          active_Ch = checkers.black; //тут все наоборот
+          inactive_Ch = checkers.white;
+        }
+        else {
+          statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+          res.status(400).send(statuscode);
+          return;
+        }
+
+        //Составление списка доступных тихих или ударных ходов выбранной шашки:
+        if (BeatFlag == true) {
+          if (chosen_ch.isQueen == true) moves = beat_move_Q_check(active_Ch, inactive_Ch, chosen_ch);
+          else moves = beat_move_not_Q_check(active_Ch, inactive_Ch, chosen_ch);
+        }
+        else {
+          if (chosen_ch.isQueen == true) moves = reg_move_Q_check(active_Ch, inactive_Ch, chosen_ch);
+          else moves = reg_move_not_Q_check(active_Ch, inactive_Ch, chosen_ch);
+        }
+
+        //Ищем шашку и меняем параметры
+        for (var i = 0; i < active_Ch.length; i++) {
+          if (active_Ch[i].horiz == chosen_ch.horiz)
+            if (active_Ch[i].vertic == chosen_ch.vertic) 
+            {
+              //Функция валидации хода
+              var valid_move = false; //false - ход запрещен, true - ход разрешен
+              for (var j = 0; j < moves.length; j++)
+                if (moves[j].horiz == move_ch.new_horiz)
+                  if (moves[j].vertic == move_ch.new_vertic)
+                  valid_move = true;
+              if (valid_move == true) {
+                //если валидация пройдена, то шашка перемещается на новые координаты:
+                active_Ch[i].horiz = move_ch.new_horiz;
+                active_Ch[i].vertic = move_ch.new_vertic;
+                //проверка на то, дошла или шашка до последней горизонтали
+                var Qfl = can_turn_Q_check(active_Ch[i].color, active_Ch[i]);
+                //если да, то она сразу превращается в дамку
+                if (Qfl) active_Ch[i].isQueen = true;
+                //console.log('Parameters of moved checker:', JSON.stringify(movedChecker));
+                //если это ударный ход, то шашка оппонента становится побитой
+                if (BeatFlag == true)
+                  inactive_Ch = beating(chosen_ch, move_ch, inactive_Ch);
+                //console.log('Enemy checkers after beating move:', inactive_Ch);
+                //составим данные о перемещенной шашке, чтобы отправить ее клиенту
+                var movedChecker = JSON.parse(JSON.stringify(
+                          {"color": active_Ch[i].color, "horiz": active_Ch[i].horiz, 
+                          "vertic": active_Ch[i].vertic, "isQueen": active_Ch[i].isQueen}
+                          ));
+                comp_flag = true;
+                UpdateCheckersField(req, checkers, function(statuscode) {
+                  console.log('List of all checkers after move:', JSON.stringify(checkers));
+                  if (statuscode)
+                    res.status(200).json(movedChecker);
+                  return;
+                })
+              }
+              else {
+                //Вернуть статус-код ошибки выбора новых координат
+                statuscode = ({ status: "error: this move is not valid" });
+                res.status(400).send(statuscode);
+                return;
+              }
+            }
+        }
+        if (!comp_flag) {
+          //Вернуть статус-код ошибки выполнения задачи
+          statuscode = ({ status: "error: no such checker" });
+          res.status(400).send(statuscode);
+        }
+      })
+    })
+  })
 });
 
 //Пост запрос на выполнение ряда действий после совершения хода игроком
-app.post('/after_move', (req, res) => {
-  var movedChecker = []; //данные о пермещенной шашке
-  var active_color = []; //массив шашек текущего игрока
-  var inactive_color = []; //массив шашек другого игрока
-  var addit_moves = []; //массив доступных ходов выбранной шашки
-  var statuscode; //статус код, который будет отправлен в ответ к серверу
-  //Валидация цвета
-  if (chosen_ch.color == "white") {
-    active_color = checkers.white; //запись всех элементов с цветом white в первый массив
-    inactive_color = checkers.black; //black во второй массив
-  }
-  else if (chosen_ch.color == "black") {
-    active_color = checkers.black; //тут все наоборот
-    inactive_color = checkers.white;
-  }
-  else {
-    statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
-    res.status(400).send(statuscode);
-    return;
-  }
-  //Проверим, какое дальше действие должно произойти
-  //Если ход был ударный, то...
-  if (BeatFlag == true) {
-    //сначала создадим данные о перемещенной шашке:
-    movedChecker.color = chosen_ch.color;
-    movedChecker.horiz = move_ch.horiz;
-    movedChecker.vertic = move_ch.vertic;
-    movedChecker.isQueen = chosen_ch.isQueen;
-    var Qfl = can_turn_Q_check(movedChecker.color, movedChecker);
-    if (Qfl) movedChecker.isQueen = true;
-    //Далее предпринимается попытка составить список следующих ударных ходов
-    addit_moves = addit_beat_move_check(active_color, inactive_color, movedChecker);
-    //Если доп ходы нашлись, то их список отправляется игроку
-    if (addit_moves.length > 0) {
-      console.log('Additional available moves of this checker are:\n', addit_moves);
-      res.status(200).json(addit_moves); //отправка списка доступных ходов клиенту
-    }
-    //Если же нет, то ход игрока завершается
-    else {
-      statuscode = { status: "End of turn!" }; //вывод сообщения о завершении хода
-      res.status(200).send(statuscode);
-      return;
-    }
-  }
-  //Если же ход был простой, то он сразу же завершается
-  else {
-    statuscode = { status: "End of turn!" }; //вывод сообщения о завершении хода
-    res.status(200).send(statuscode);
-    return;
-  }
+app.post('/ru_after_move', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    var movedChecker = extractChosenCh(req); //данные о перемещенной шашке
+    extractActiveColor(req, function(active_color) {
+      extractBeatFlag(req, function(BeatFlag) {
+        var active_Ch = []; //массив шашек текущего игрока
+        var inactive_Ch = []; //массив шашек другого игрока
+        var addit_moves = []; //массив доступных ходов выбранной шашки
+        var statuscode; //статус код, который будет отправлен в ответ к серверу
+        //Валидация цвета
+        if (active_color == "white") {
+          active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+          inactive_Ch = checkers.black; //black во второй массив
+        }
+        else if (active_color == "black") {
+          active_Ch = checkers.black; //тут все наоборот
+          inactive_Ch = checkers.white;
+        }
+        else {
+          statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+          res.status(400).send(statuscode);
+          return;
+        }
+        //Проверим, какое дальше действие должно произойти
+        //Если ход был ударный, то...
+        if (BeatFlag == true) {
+          //Далее предпринимается попытка составить список следующих ударных ходов
+          addit_moves = addit_beat_move_check(active_Ch, inactive_Ch, movedChecker);
+          //Если доп ходы нашлись, то их список отправляется игроку
+          if (addit_moves.length > 0) {
+            console.log('Additional available moves of this checker are:\n', addit_moves);
+            res.status(200).json(addit_moves); //отправка списка доступных ходов клиенту
+          }
+          //Если же нет, то ход игрока завершается
+          else {
+            //Удалим все съеденные шашки оппонента
+            for (var i = 0; i < inactive_Ch.length; i++) { 
+              if (inactive_Ch[i].isBeaten == true) {
+                  inactive_Ch.splice(i,1);
+                  i--;
+                }
+            }
+            //Если шашек оппонента больше нет, то игра завершается
+            if (inactive_Ch.length == 0) {
+              statuscode = { status: `End of the game!${chosen_ch.color} has won!`}; //вывод сообщения о победе
+              res.status(200).send(statuscode);
+              return;
+            }
+            //Если же еще остались, то завершается ход
+            else {      
+              SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
+                if (statuscode) {
+                  UpdateCheckersField(req, checkers, function(statuscode) {
+                    console.log('List of all checkers after end of turn:', JSON.stringify(checkers));
+                    console.log('End of turn');
+                    res.status(200).send(statuscode);
+                    return;
+                  })
+                }
+              })
+            }
+          }
+        }
+        //Если же ход был простой, то он сразу же завершается
+        else {
+          SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
+            console.log('End of turn');
+            res.status(200).send(statuscode);
+            return;
+          })
+        }
+      })
+    })
+  })
 });
 
 app.listen(port, () => { //клиент запущен
