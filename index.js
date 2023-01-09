@@ -1649,6 +1649,866 @@ app.post('/en_after_move', (req, res) => {
   })
 });
 
+//------------------ТУРЕЦКИЕ ШАШКИ------------------------
+
+//набор функций, которые будут использоваться для различных проверок:
+//проверка доступности тихого хода простой шашки:
+function reg_move_not_Q_check_tu(OurCH, EnCH, checker) {
+  var reg_moves = []; //список тихих ходов
+  var brfl = false; //вспомогательный флаг удаления записи из список
+  //изначально записываем все возможные тихие ходы шашки:
+  if (checker.color == "white") {
+    reg_moves[0] = { horiz: checker.horiz+1, vertic: checker.vertic };
+    reg_moves[1] = { horiz: checker.horiz, vertic: checker.vertic-1 };
+    reg_moves[2] = { horiz: checker.horiz, vertic: checker.vertic+1 };
+  }
+  else 
+  if (checker.color == "black") {
+    reg_moves[0] = { horiz: checker.horiz-1, vertic: checker.vertic };
+    reg_moves[1] = { horiz: checker.horiz, vertic: checker.vertic-1 };
+    reg_moves[2] = { horiz: checker.horiz, vertic: checker.vertic+1 };
+  }
+  //теперь удалим из списка те ходы, которые ограничены:
+  for (var i = 0; i < reg_moves.length; i++) { 
+    //сначала проверим на выход за границы игровой доски:
+    if ((reg_moves[i].horiz < 1 || reg_moves[i].horiz > 8) || 
+      (reg_moves[i].vertic < 1 || reg_moves[i].vertic > 8)) {
+        reg_moves.splice(i,1);
+        i--;
+        continue;
+      }
+    //потом проверим свободно ли поле, на которое перемещается шашка:
+    //есть ли в полях союзные шашки?:
+    for (var j = 0; j < OurCH.length; j++)
+      if (OurCH[j].horiz == reg_moves[i].horiz)
+        if (OurCH[j].vertic == reg_moves[i].vertic) {
+          reg_moves.splice(i,1);
+          brfl = true;
+          break;
+        }
+    //есть ли в полях шашки оппонента?:
+    for (var j = 0; j < EnCH.length; j++)
+      if (EnCH[j].horiz == reg_moves[i].horiz)
+        if (EnCH[j].vertic == reg_moves[i].vertic) {
+          reg_moves.splice(i,1);
+          brfl = true;
+          break;
+        }
+    if (brfl == true) {
+      i--;
+      brfl = false;
+    }
+  }
+  return reg_moves;
+}
+
+//проверка доступности тихого хода дамки:
+function reg_move_Q_check_tu(OurCH, EnCH, checker) {
+  var reg_moves = []; //список тихих ходов
+  var brfl = false; //вспомогательный флаг прерывания записи в список
+  var count = 0; //номер в списке ходов
+  //будем искать тихие ходы во всех 4 направлениях:
+  //вниз:
+  for (var k = 0; k < 8; k++) { //будем считать до 8, так как это максимум на доске
+    //сначала посмотрим, является ли поле занято другой шашкой
+    for (var j = 0; j < OurCH.length; j++) {
+      var h = checker.horiz-(k+1);
+      var v = checker.vertic;
+      if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+        brfl = true; //если да, то поиск прекращается в этом направлении
+        break;
+      }
+    }
+    for (var j = 0; j < EnCH.length; j++) {
+      var h = checker.horiz-(k+1);
+      var v = checker.vertic;
+      if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    //так же проверяется, не вышла ли проверка за границы игровой доски
+    if (h < 1 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    //если ни одно из условий не нарушено, то поле записывается в список
+    reg_moves[count] = { horiz: h, vertic: v };
+    count++;
+  }
+  //вправо:
+  for (var k = 0; k < 8; k++) {
+    for (var j = 0; j < OurCH.length; j++) {
+      var h = checker.horiz;
+      var v = checker.vertic+(k+1);
+      if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    for (var j = 0; j < EnCH.length; j++) {
+      var h = checker.horiz;
+      var v = checker.vertic+(k+1);
+      if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    if (v > 8 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    reg_moves[count] = { horiz: h, vertic: v };
+    count++;
+  }
+  //вверх:
+  for (var k = 0; k < 8; k++) {
+    for (var j = 0; j < OurCH.length; j++) {
+      var h = checker.horiz+(k+1);
+      var v = checker.vertic;
+      if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    for (var j = 0; j < EnCH.length; j++) {
+      var h = checker.horiz+(k+1);
+      var v = checker.vertic;
+      if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    if (h > 8 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    reg_moves[count] = { horiz: h, vertic: v };
+    count++;
+  }
+  //влево:
+  for (var k = 0; k < 8; k++) {
+    for (var j = 0; j < OurCH.length; j++) {
+      var h = checker.horiz;
+      var v = checker.vertic-(k+1);
+      if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    for (var j = 0; j < EnCH.length; j++) {
+      var h = checker.horiz;
+      var v = checker.vertic-(k+1);
+      if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+        brfl = true;
+        break;
+      }
+    }
+    if (v < 1 || brfl == true) {
+      brfl = false;
+      break;
+    }
+    reg_moves[count] = { horiz: h, vertic: v };
+    count++;
+  }
+  return reg_moves;
+}
+
+//проверка доступности ударного хода простой шашки:
+function beat_move_not_Q_check_tu(OurCH, EnCH, checker) {
+  var beat_moves = []; //список ударных ходов
+  var enemy_check = []; //вспомогательный список полей с потеницальной шашкой оппонента
+  var brfl = false; //вспомогательный флаг удаления записи из список
+  //изначально записываем все возможные ударные ходы шашки и поля с потеницальной шашкой врага:
+  if (checker.color == "white") {
+    beat_moves[0] = { horiz: checker.horiz+2, vertic: checker.vertic };
+    beat_moves[1] = { horiz: checker.horiz, vertic: checker.vertic+2 };
+    beat_moves[2] = { horiz: checker.horiz, vertic: checker.vertic-2 };
+    enemy_check[0] = { horiz: checker.horiz+1, vertic: checker.vertic };
+    enemy_check[1] = { horiz: checker.horiz, vertic: checker.vertic+1 };
+    enemy_check[2] = { horiz: checker.horiz, vertic: checker.vertic-1 };
+  }
+  else if (checker.color == "black") {
+    beat_moves[0] = { horiz: checker.horiz-2, vertic: checker.vertic };
+    beat_moves[1] = { horiz: checker.horiz, vertic: checker.vertic+2 };
+    beat_moves[2] = { horiz: checker.horiz, vertic: checker.vertic-2 };
+    enemy_check[0] = { horiz: checker.horiz-1, vertic: checker.vertic };
+    enemy_check[1] = { horiz: checker.horiz, vertic: checker.vertic+1 };
+    enemy_check[2] = { horiz: checker.horiz, vertic: checker.vertic-1 };
+  }
+  //теперь удалим из списка те ходы, которые ограничены:
+  for (var i = 0; i < beat_moves.length; i++) { 
+    //сначала проверим на выход за границы игровой доски:
+    if ((beat_moves[i].horiz < 1 || beat_moves[i].horiz > 8) || 
+      (beat_moves[i].vertic < 1 || beat_moves[i].vertic > 8)) {
+        beat_moves.splice(i,1);
+        enemy_check.splice(i,1);
+        i--;
+        continue;
+      }
+    //потом проверим на то, находится ли на пути шашка оппонента:
+    brfl = true;
+    for (var j = 0; j < EnCH.length; j++) 
+      if (EnCH[j].horiz == enemy_check[i].horiz)
+        if (EnCH[j].vertic == enemy_check[i].vertic) {
+          brfl = false;
+          break;
+        }
+    //после проверим свободно ли поле, на которое перемещается шашка:
+    //есть ли в полях союзные шашки?:
+    for (var j = 0; j < OurCH.length; j++) 
+      if (OurCH[j].horiz == beat_moves[i].horiz)
+        if (OurCH[j].vertic == beat_moves[i].vertic) {
+          brfl = true;
+          break;
+        }
+    //есть ли в полях шашки оппонента?:
+    for (var j = 0; j < EnCH.length; j++) 
+      if (EnCH[j].horiz == beat_moves[i].horiz)
+        if (EnCH[j].vertic == beat_moves[i].vertic) {
+          brfl = true;
+          break;
+        }
+    if (brfl == true) {
+      beat_moves.splice(i,1);
+      enemy_check.splice(i,1);
+      i--;
+      brfl = false;
+    }
+  }
+  //console.log('Potential enemy checkers:', enemy_check);
+  return beat_moves;
+}
+
+//проверка доступности ударного хода дамки:
+function beat_move_Q_check_tu(OurCH, EnCH, checker, forb_dir) {
+  var beat_moves = []; //список ударных ходов
+  var enemy_check = []; //вспомогательный список полей с шашкой оппонента
+  var brfl = false; //вспомогательный флаг прерывания записи в список
+  var enfl = false; //флаг нахождения шашки оппонента
+  var count = 0; //номер в списке ходов
+  var countEn = 0; //номер в списке полей с шашкой оппонента
+  //будем искать ударные ходы во всех 4 направлениях:
+  //вниз:
+  for (var k = 0; k < 8; k++) { //будем считать до 8, так как это максимум на доске
+    //разделим проверку на 2 части:
+    //1) проверка свободных полей ДО шашки оппонента
+    if (enfl == false){
+      //сначала посмотрим, является ли поле занято шашкой ОППОНЕНТА
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz-(k+1);
+        var v = checker.vertic;
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          //сначала убедимся, что это направление допустимо
+          if(forb_dir == 0) {
+            brfl = true; //если нет, то поиск прекращается в этом направлении
+            break;
+          }
+          //в ином же случае шашка оппонента является потеницально подходящей
+          enfl = true; //активируется флаг нахождения шашки оппонента
+          //в список записывается поле с шашкой оппонента
+          enemy_check[countEn] = { horiz: h, vertic: v };
+          countEn++;
+          break;
+        }
+      }
+      //потом проверим, а не занято ли поле нашей шашкой, что уже является препядствием
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz-(k+1);
+        var v = checker.vertic;
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true; //если да, то поиск прекращается в этом направлении
+          break;
+        }
+      }
+      //так же проверяется, не вышла ли проверка за границы игровой доски
+      if (h < 1 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+    }
+    //2) проверка свободных полей ПОСЛЕ шашки оппонента
+    else {
+      //сначала посмотрим, является ли поле занято другой шашкой
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz-(k+1);
+        var v = checker.vertic;
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true; //если да, то поиск прекращается в этом направлении
+          break;
+        }
+      }
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz-(k+1);
+        var v = checker.vertic;
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      //так же проверяется, не вышла ли проверка за границы игровой доски
+      if (h < 1 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+      //если ни одно из условий не нарушено, то поле записывается в список
+      beat_moves[count] = { horiz: h, vertic: v };
+      count++;
+    }   
+  }
+  //вправо:
+  for (var k = 0; k < 8; k++) {
+    if (enfl == false) {
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic+(k+1);
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          if(forb_dir == 1) {
+            brfl = true;
+            break;
+          }
+          enfl = true;
+          enemy_check[countEn] = { horiz: h, vertic: v };
+          countEn++;
+          break;
+        }
+      }
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic+(k+1);
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      if (v > 8 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+    }
+    else {
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic+(k+1);
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic+(k+1);
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      if (v > 8 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+      beat_moves[count] = { horiz: h, vertic: v };
+      count++;
+    }
+  }
+  //вверх:
+  for (var k = 0; k < 8; k++) {
+    if (enfl == false) {
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz+(k+1);
+        var v = checker.vertic;
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          if(forb_dir == 2) {
+            brfl = true;
+            break;
+          }
+          enfl = true;
+          enemy_check[countEn] = { horiz: h, vertic: v };
+          countEn++;
+          break;
+        }
+      }
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz+(k+1);
+        var v = checker.vertic;
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      if (h > 8 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+    }
+    else {
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz+(k+1);
+        var v = checker.vertic;
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz+(k+1);
+        var v = checker.vertic;
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      if (h > 8 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+      beat_moves[count] = { horiz: h, vertic: v };
+      count++;
+    }
+  }
+  //влево:
+  for (var k = 0; k < 8; k++) {
+    if (enfl == false) {
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic-(k+1);
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          if(forb_dir == 3) {
+            brfl = true;
+            break;
+          }
+          enfl = true;
+          enemy_check[countEn] = { horiz: h, vertic: v };
+          countEn++;
+          break;
+        }
+      }
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic-(k+1);
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      if (v < 1 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+    }
+    else {
+      for (var j = 0; j < OurCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic-(k+1);
+        if (OurCH[j].horiz == h && OurCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      for (var j = 0; j < EnCH.length; j++) {
+        var h = checker.horiz;
+        var v = checker.vertic-(k+1);
+        if (EnCH[j].horiz == h && EnCH[j].vertic == v) {
+          brfl = true;
+          break;
+        }
+      }
+      if (v < 1 || brfl == true) {
+        brfl = false;
+        enfl = false;
+        break;
+      }
+      beat_moves[count] = { horiz: h, vertic: v };
+      count++;
+    }
+  }
+  //console.log('Potential enemy checkers:', enemy_check);
+  return beat_moves;
+}
+
+//проверка на то, может ли простая шашка превратится в дамку
+function can_turn_Q_check_tu(color, movedChecker) {
+  var horiz_to_check; //выбирается, какая диагональ будет чекатся
+  var Qfl = false; //возвращаемый флаг превращения в дамку
+  if (color == "white") horiz_to_check = 8;
+  else if (color == "black") horiz_to_check = 1;
+  if (movedChecker.horiz == horiz_to_check) Qfl = true;
+  return Qfl;
+}
+
+//произведение ударного хода
+function beating_tu(checker, move, enemy_checkers) {
+  //начальные и конечные координаты, в пределах которых ищется шашка оппонента:
+  var h1, h2, v1, v2;
+  //движение, противоположное направлению движения шашки:
+  var opp_direction; //0 - вниз, 1 - вправо, 2 - вверх, 3 - влево
+  var const_horiz; //вспомогательное значение для определения направления
+  //сначала зададим конечные координаты для горизонтали и вертикали
+  if (checker.horiz == move.new_horiz) 
+    const_horiz = true;
+  else if (checker.horiz > move.new_horiz) { //вниз
+    h1 = move.new_horiz+1; //h1 всегда нижняя горизонталь
+    h2 = checker.horiz-1; //h2 - верхняя
+    opp_direction = 2;
+  }
+  else { //вверх
+    h1 = checker.horiz+1;
+    h2 = move.new_horiz-1;
+    opp_direction = 0;
+  }
+  if (checker.vertic == move.new_vertic) 
+    const_horiz = false;
+  if (checker.vertic > move.new_vertic) { //влево
+    v1 = move.new_vertic+1; //v1 всегда левая вертикаль
+    v2 = checker.vertic-1; //v2 - правая
+    opp_direction = 1;
+  }
+  else { //вправо
+    v1 = checker.vertic+1;
+    v2 = move.new_vertic-1;
+    opp_direction = 3;
+  }
+  //определим направление узнав, меняется ли значение горизонтали
+  if (const_horiz == false) {
+    //если да, то значит шашка переместилась по вертикали
+    var v_comp = checker.vertic;
+    for (var h_comp = h1; h_comp < h2+1; h_comp++) {
+      //производится поиск шашки оппонента с заданными координатами
+      for (var k = 0; k < enemy_checkers.length; k++) {
+        if (enemy_checkers[k].horiz == h_comp)
+          if (enemy_checkers[k].vertic == v_comp) {
+            //когда она найдена, она удаляется из списка шашек:
+            enemy_checkers.splice(k,1);
+            //возвращается измененный список всех шашек оппонента:
+            return [enemy_checkers, opp_direction]; 
+          }
+      }
+    }
+  }
+  else {
+    //если же нет, значит шашка перемещалась по этой горизонтали
+    var h_comp = checker.horiz;
+    for (var v_comp = v1; v_comp < v2+1; v_comp++) {
+      //производится поиск шашки оппонента с заданными координатами
+      for (var k = 0; k < enemy_checkers.length; k++) {
+        if (enemy_checkers[k].horiz == h_comp)
+          if (enemy_checkers[k].vertic == v_comp) {
+            //когда она найдена, она удаляется из списка шашек:
+            enemy_checkers.splice(k,1);
+            //возвращается измененный список всех шашек оппонента:
+            return [enemy_checkers, opp_direction]; 
+          }
+      }
+    }
+  }
+  return 0;
+}
+
+//проверка на то, что шашка может нанести еще один ударный ход
+function addit_beat_move_check_tu(OurCH, EnCH, movedChecker, forb_dir) {
+  var bfl = false;
+  moves = []; //массив доступных ходов перемещенной шашки
+  //проверка на возможность игроком нанести еще один ударный ход
+  if (movedChecker.isQueen == true) 
+    moves = beat_move_Q_check_tu(OurCH, EnCH, movedChecker, forb_dir);
+  else moves = beat_move_not_Q_check_tu(OurCH, EnCH, movedChecker);
+  if (moves.length > 0) bfl = true;
+  console.log('Player can make another beat move?:', bfl);
+  return moves; //вывод ходов, если они имеются
+}
+
+
+//пост запрос в начале хода для различных проверок
+app.post('/tu_turn_begin', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    extractActiveColor(req, function(active_color) {
+      active_Ch = []; //массив шашек текущего игрока
+      inactive_Ch = []; //массив шашек другого игрока
+      moves = []; //массив доступных ходов выбранной шашки
+      var statuscode; //статус код, который будет отправлен в ответ к серверу
+      var BeatFlag = false; //флаг возможности нанести ударный ход
+      //Валидация цвета
+      if (active_color == "white") {
+        active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+        inactive_Ch = checkers.black; //black во второй массив
+      }
+      else if (active_color == "black") {
+        active_Ch = checkers.black; //тут все наоборот
+        inactive_Ch = checkers.white;
+      }
+      else {
+        statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+        res.status(400).send(statuscode);
+        return;
+      }
+      //проверка на возможность игроком нанести ударный ход
+      for (var i = 0; i < active_Ch.length; i++) {
+        if (active_Ch[i].isQueen == true) 
+          moves = beat_move_Q_check_tu(active_Ch, inactive_Ch, active_Ch[i]);
+        else moves = beat_move_not_Q_check_tu(active_Ch, inactive_Ch, active_Ch[i]);
+        if (moves.length > 0) {
+          BeatFlag = true;
+          break;
+        }
+      }
+      console.log('Player can make a beat move?:', BeatFlag);
+      SetBeatFlag(req, BeatFlag, function(statuscode) {
+        res.status(200).send(statuscode);
+        return;
+      })
+    })
+  })
+})
+
+//Пост запрос на вывод списка доступных ходов при пришедших данных о выбранной шашке
+app.post('/tu_available_moves', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    var chosen_ch = extractChosenCh(req);
+    extractActiveColor(req, function(active_color) {
+      extractBeatFlag(req, function(BeatFlag) {
+        var active_Ch = []; //массив шашек текущего игрока
+        var inactive_Ch = []; //массив шашек другого игрока
+        var moves = []; //массив доступных ходов выбранной шашки
+        var statuscode; //статус код, который будет отправлен в ответ к серверу
+        //Валидация цвета
+        if (active_color == "white") {
+          active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+          inactive_Ch = checkers.black; //black во второй массив
+        }
+        else if (active_color == "black") {
+          active_Ch = checkers.black; //тут все наоборот
+          inactive_Ch = checkers.white;
+        }
+        else {
+          statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+          res.status(400).send(statuscode);
+          return;
+        }
+
+        //Составление списка доступных тихих или ударных ходов выбранной шашки:
+        if (BeatFlag == true) {
+          if (chosen_ch.isQueen == true) moves = beat_move_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+          else moves = beat_move_not_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+        }
+        else {
+          if (chosen_ch.isQueen == true) moves = reg_move_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+          else moves = reg_move_not_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+        }
+
+        console.log('Available moves of this checker are:\n', moves); //вывод списка ходов в консоль
+        res.status(200).json(moves); //отправка списка доступных ходов клиенту
+      })
+    })
+  })
+});
+
+//Пост запрос на перемещение выбранной шашки в выбранные координаты
+app.post('/tu_move', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    var chosen_ch = extractChosenCh(req);
+    var move_ch = extractCheckerMovement(req);
+    extractActiveColor(req, function(active_color) {
+      extractBeatFlag(req, function(BeatFlag) {
+        var active_Ch = []; //массив шашек текущего игрока
+        var inactive_Ch = []; //массив шашек другого игрока
+        var moves = []; //массив доступных ходов выбранной шашки
+        var statuscode; //статус код, который будет отправлен в ответ к серверу
+        var comp_flag = false; //флаг выполнения задачи
+        //Валидация цвета
+        if (active_color == "white") {
+          active_Ch = checkers.white; //запись всех элементов с цветом white в первый массив
+          inactive_Ch = checkers.black; //black во второй массив
+        }
+        else if (active_color == "black") {
+          active_Ch = checkers.black; //тут все наоборот
+          inactive_Ch = checkers.white;
+        }
+        else {
+          statuscode = { status: "error: no such color" }; //вывод ошибки если цвет неправильный
+          res.status(400).send(statuscode);
+          return;
+        }
+
+        //Составление списка доступных тихих или ударных ходов выбранной шашки:
+        if (BeatFlag == true) {
+          if (chosen_ch.isQueen == true) moves = beat_move_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+          else moves = beat_move_not_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+        }
+        else {
+          if (chosen_ch.isQueen == true) moves = reg_move_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+          else moves = reg_move_not_Q_check_tu(active_Ch, inactive_Ch, chosen_ch);
+        }
+
+        //Ищем шашку и меняем параметры
+        for (var i = 0; i < active_Ch.length; i++) {
+          if (active_Ch[i].horiz == chosen_ch.horiz)
+            if (active_Ch[i].vertic == chosen_ch.vertic) 
+            {
+              //Функция валидации хода
+              var valid_move = false; //false - ход запрещен, true - ход разрешен
+              for (var j = 0; j < moves.length; j++)
+                if (moves[j].horiz == move_ch.new_horiz)
+                  if (moves[j].vertic == move_ch.new_vertic)
+                  valid_move = true;
+              if (valid_move == true) {
+                //если валидация пройдена, то шашка перемещается на новые координаты:
+                active_Ch[i].horiz = move_ch.new_horiz;
+                active_Ch[i].vertic = move_ch.new_vertic;
+                //проверка на то, дошла или шашка до последней горизонтали
+                var Qfl = false; //изначальный флаг превращения в дамку
+                //при этом предварительно проверяется, является ли уже шашка дамкой
+                if (active_Ch[i].isQueen == false)
+                  //если нет, то проверка активируется
+                  Qfl = can_turn_Q_check_tu(active_Ch[i].color, active_Ch[i]);
+                //если флаг активировался, то шашка превращается в дамку в конце всего хода 
+                //console.log('Parameters of moved checker:', JSON.stringify(movedChecker));
+                //если это ударный ход, то шашка оппонента сразу же покидает поле
+                //при это вычисляется противоположное движение шашки
+                var opp_direction;
+                if (BeatFlag == true)
+                  [inactive_Ch, opp_direction] = beating_tu(chosen_ch, move_ch, inactive_Ch);
+                //console.log('Enemy checkers after beating move:', inactive_Ch);
+                //составим данные о перемещенной шашке, чтобы отправить ее клиенту
+                var movedChecker = JSON.parse(JSON.stringify(
+                          {"color": active_Ch[i].color, "horiz": active_Ch[i].horiz, 
+                          "vertic": active_Ch[i].vertic, "isQueen": active_Ch[i].isQueen,
+                          "turnedQueen": Qfl, "forbidden_direction": opp_direction}
+                          ));
+                comp_flag = true;
+                UpdateCheckersField(req, checkers, function(statuscode) {
+                  console.log('List of all checkers after move:', JSON.stringify(checkers));
+                  if (statuscode)
+                    res.status(200).json(movedChecker);
+                  return;
+                })
+              }
+              else {
+                //Вернуть статус-код ошибки выбора новых координат
+                statuscode = ({ status: "error: this move is not valid" });
+                res.status(400).send(statuscode);
+                return;
+              }
+            }
+        }
+        if (!comp_flag) {
+          //Вернуть статус-код ошибки выполнения задачи
+          statuscode = ({ status: "error: no such checker" });
+          res.status(400).send(statuscode);
+        }
+      })
+    })
+  })
+});
+
+//Пост запрос на выполнение ряда действий после совершения хода игроком
+app.post('/tu_after_move', (req, res) => {
+  extractCheckers(req, function(checkers) {
+    var movedChecker = extractChosenCh(req); //данные о перемещенной шашке
+    var turnedQueen = req.body.turnedQueen; //превратилась ли она в дамку
+    //запрещенное направление:
+    //0 - вниз, 1 - вправо, 2 - вверх, 3 - влево
+    var forb_dir = req.body.forbidden_direction; 
+    extractActiveColor(req, function(active_color) {
+      extractBeatFlag(req, function(BeatFlag) {
+        var active_Ch = []; //массив шашек текущего игрока
+        var inactive_Ch = []; //массив шашек другого игрока
+        var addit_moves = []; //массив доступных ходов выбранной шашки
+        var statuscode; //статус код, который будет отправлен в ответ к серверу
+        //Валидация цвета
+        if (active_color == "white") {
+          //запись всех элементов с цветом white в первый массив:
+          active_Ch = checkers.white; 
+          inactive_Ch = checkers.black; //black во второй массив
+        }
+        else if (active_color == "black") {
+          active_Ch = checkers.black; //тут все наоборот
+          inactive_Ch = checkers.white;
+        }
+        else {
+          //вывод ошибки если цвет неправильный
+          statuscode = { status: "error: no such color" };
+          res.status(400).send(statuscode);
+          return;
+        }
+        //Проверим, какое дальше действие должно произойти
+        //Если ход был ударный, то...
+        if (BeatFlag == true) {
+          //Далее предпринимается попытка составить список следующих ударных ходов
+          addit_moves = addit_beat_move_check_tu(active_Ch, inactive_Ch, 
+            movedChecker, forb_dir);
+          //Если доп ходы нашлись, то список этих доп ходов отправляется игроку
+          if (addit_moves.length > 0) {
+            console.log('Additional available moves of this checker are:\n', 
+            addit_moves);
+            //отправка списка доступных ходов клиенту:
+            res.status(200).json(addit_moves); 
+          }
+          //В ином же случае ход игрока завершается
+          else {
+            //Если шашка получила флаг превращения в дамку, то она наконец превращается
+            if (turnedQueen) {
+              for (var j = 0; j < active_Ch.length; j++)
+                if (active_Ch[j].horiz == movedChecker.horiz)
+                  if (active_Ch[j].vertic == movedChecker.vertic)
+                    active_Ch[j].isQueen == true;
+            }
+            //Если шашек оппонента больше нет, то игра завершается
+            if (inactive_Ch.length == 0) {
+              SetWinnerColor(req, active_color, function(statuscode) {
+                console.log(`End of the game!${active_color} has won!`);
+                res.status(200).send(statuscode);
+                return;
+              })
+            }
+            //Если же еще остались, то завершается ход
+            else {      
+              SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
+                if (statuscode) {
+                  UpdateCheckersField(req, checkers, function(statuscode) {
+                    console.log('List of all checkers after end of turn:', 
+                    JSON.stringify(checkers));
+                    console.log('End of turn');
+                    res.status(200).send(statuscode);
+                    return;
+                  })
+                }
+              })
+            }
+          }
+        }
+        //Если же ход был простой, то он сразу же завершается
+        else {
+          //Если шашка получила флаг превращения в дамку, то она превращается
+          if (turnedQueen) {
+            for (var j = 0; j < active_Ch.length; j++)
+              if (active_Ch[j].horiz == movedChecker.horiz)
+                if (active_Ch[j].vertic == movedChecker.vertic)
+                  active_Ch[j].isQueen == true;
+          }
+          SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
+            if (statuscode) {
+              UpdateCheckersField(req, checkers, function(statuscode) {
+                console.log('List of all checkers after end of turn:', 
+                JSON.stringify(checkers));
+                console.log('End of turn');
+                res.status(200).send(statuscode);
+                return;
+              })
+            }
+          })
+        }
+      })
+    })
+  })
+});
+
 app.listen(port, () => { //клиент запущен
   console.log(`Client active on port ${port}`);
 })
