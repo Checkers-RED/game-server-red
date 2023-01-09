@@ -1,5 +1,6 @@
 const e = require('express');
 const express = require('express'); //подключение нужных библиотек
+const cors = require('cors');
 const XMLHttpRequest = require('xhr2');
 
 const hostname = '127.0.0.1'; //хост
@@ -16,6 +17,7 @@ const server_port = 2020 //порт сервера БД
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 /*//При отправлении гет запроса мы получаем данные ./checkers.json с сервера
 app.get('/session_checkers', (req, res) => {
