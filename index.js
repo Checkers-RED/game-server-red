@@ -40,7 +40,6 @@ app.get('/session_checkers', (req, res) => {
 //получение полного списка шашек
 function extractCheckers(req, callback) { //extractCheckers(req, function(checkers) {...})
 try { //валидация успешна
-  console.log('extractCheckers_ok'); //вывод в консоль
   var cur_ses = req.body.current_session;
   var json = JSON.stringify({"current_session": cur_ses});
   const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -49,9 +48,9 @@ try { //валидация успешна
   request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
   request.send(json); //хз
   request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-      //console.log(request.response); //вывод в консоль
-      var checkers = JSON.parse(request.response); //запись в переменную ответ с сервера
-      callback(checkers); 
+    var checkers = JSON.parse(request.response); //запись в переменную ответ с сервера
+    console.log('extractCheckers_ok'); //вывод в консоль
+    callback(checkers); 
   }
 }
 catch {
@@ -63,7 +62,6 @@ catch {
 //получение полного списка шашек
 function extractActiveColor(req, callback) { //extractActiveColor(req, function(active_color) {...})
   try { //валидация успешна
-    console.log('extractActiveColor_ok'); //вывод в консоль
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -72,9 +70,9 @@ function extractActiveColor(req, callback) { //extractActiveColor(req, function(
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        //console.log(request.response); //вывод в консоль
-        var active_color = JSON.parse(request.response); //запись в переменную ответ с сервера
-        callback(active_color.active_color); 
+      var active_color = JSON.parse(request.response); //запись в переменную ответ с сервера
+      console.log('extractActiveColor_ok'); //вывод в консоль
+      callback(active_color.active_color); 
     }
   }
   catch {
@@ -86,7 +84,6 @@ function extractActiveColor(req, callback) { //extractActiveColor(req, function(
 //получение флага ударного хода
 function extractBeatFlag(req, callback) { //extractBeatFlag(req, function(BeatFlag) {...})
   try { //валидация успешна
-    console.log('extractBeatFlag_ok'); //вывод в консоль
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -95,9 +92,9 @@ function extractBeatFlag(req, callback) { //extractBeatFlag(req, function(BeatFl
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        //console.log(request.response); //вывод в консоль
-        var BeatFlag = JSON.parse(request.response); //запись в переменную ответ с сервера
-        callback(BeatFlag.beat_flag); 
+      var BeatFlag = JSON.parse(request.response); //запись в переменную ответ с сервера
+      console.log('extractBeatFlag_ok'); //вывод в консоль
+      callback(BeatFlag.beat_flag); 
     }
   }
   catch {
@@ -109,7 +106,6 @@ function extractBeatFlag(req, callback) { //extractBeatFlag(req, function(BeatFl
 //установка флага ударного хода
 function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, function(callback) {...})
   try { //валидация успешна
-    console.log('SetBeatFlag_ok'); //вывод в консоль
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "BeatFlag": BeatFlag});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -118,9 +114,9 @@ function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, fun
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        //console.log(request.response); //вывод в консоль
-        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
-        callback(statuscode); 
+      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      console.log('SetBeatFlag_ok'); //вывод в консоль
+      callback(statuscode); 
     }
   }
   catch {
@@ -130,22 +126,24 @@ function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, fun
 }
 
 //обновление списка шашек
-function UpdateCheckersField(req, checkers, callback) {
+function UpdateCheckersField(req, checkers, chosen_ch, movedChecker, callback) {
 //UpdateCheckersField(req, checkers, function(callback) {...})
   try { //валидация успешна
-    console.log('UpdateCheckersField_ok'); //вывод в консоль
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "white": checkers.white, 
-                "black": checkers.black});
+                "black": checkers.black, "previous_horiz": chosen_ch.horiz,
+                "previous_vertic": chosen_ch.vertic, 
+                "new_horiz": movedChecker.horiz,
+                "new_vertic": movedChecker.vertic,});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
     //request.open("POST", `http://${server_ip_address}:${server_port}/UpdateCheckersField`); //гет запрос на сервер
     request.open("POST", `http://localhost:3000/UpdateCheckersField`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        //console.log(request.response); //вывод в консоль
-        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
-        callback(statuscode); 
+      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      console.log('UpdateCheckersField_ok'); //вывод в консоль
+      callback(statuscode); 
     }
   }
   catch {
@@ -157,7 +155,6 @@ function UpdateCheckersField(req, checkers, callback) {
 //установка флага ударного хода
 function SetActiveColor(req, color, callback) { //SetActiveColor(req, color, function(callback) {...})
   try { //валидация успешна
-    console.log('SetActiveColor_ok'); //вывод в консоль
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "active_color": color});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -166,9 +163,9 @@ function SetActiveColor(req, color, callback) { //SetActiveColor(req, color, fun
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        //console.log(request.response); //вывод в консоль
-        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
-        callback(statuscode); 
+      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      console.log('SetActiveColor_ok'); //вывод в консоль
+      callback(statuscode); 
     }
   }
   catch {
@@ -180,7 +177,6 @@ function SetActiveColor(req, color, callback) { //SetActiveColor(req, color, fun
 //установка цвета победителя
 function SetWinnerColor(req, color, callback) { //SetWinnerColor(req, color, function(callback) {...})
   try { //валидация успешна
-    console.log('SetWinnerColor_ok'); //вывод в консоль
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "winner_color": color});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
@@ -189,9 +185,9 @@ function SetWinnerColor(req, color, callback) { //SetWinnerColor(req, color, fun
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-        //console.log(request.response); //вывод в консоль
-        var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
-        callback(statuscode); 
+      console.log('SetWinnerColor_ok'); //вывод в консоль
+      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      callback(statuscode); 
     }
   }
   catch {
@@ -232,7 +228,6 @@ function SetWinnerColor(req, color, callback) { //SetWinnerColor(req, color, fun
 //получение данные о шашке, которой будут ходить
 function extractChosenCh(req) { //var chosen_ch = extractChosenCh(req);
   try {
-    console.log('extractChosenCh_1'); //вывод в консоль
     var full_user_input = req.body; //запись в переменную ответ с сервера
     //параметры выбранной шашки:
     color_chCh = full_user_input.color;
@@ -241,6 +236,7 @@ function extractChosenCh(req) { //var chosen_ch = extractChosenCh(req);
     isQ_chCh = full_user_input.isQueen;
     console.log('Coordinates of chosen', color_chCh, 'checker are:', h_chCh, v_chCh,
                 '\nThis checker is queen:', isQ_chCh);
+    console.log('extractChosenCh_ok'); //вывод в консоль
     return JSON.parse(
             JSON.stringify(
                     {"color": color_chCh, "horiz": h_chCh, 
@@ -248,7 +244,7 @@ function extractChosenCh(req) { //var chosen_ch = extractChosenCh(req);
                     ));
   }
   catch {
-      console.log('extractChosenCh_2'); //вывод в консоль
+      console.log('extractChosenCh_err'); //вывод в консоль
       return 0; //подозрительное преобразование типов
   }
 }
@@ -284,17 +280,17 @@ function extractChosenCh(req) { //var chosen_ch = extractChosenCh(req);
 //получение координат перемещения шашки
 function extractCheckerMovement(req) { //var move_ch = extractCheckerMovement(req);
   try {
-    console.log('extractCheckerMovement_1'); //вывод в консоль
     var full_user_input = req.body; //запись в переменную ответ с сервера
     //параметры выбранной шашки: 
     new_h_Ch = full_user_input.new_horiz;
     new_v_Ch = full_user_input.new_vertic;
     console.log('New coordinates are:', new_h_Ch, new_v_Ch);
+    console.log('extractCheckerMovement_ok'); //вывод в консоль
     return JSON.parse(
             JSON.stringify({"new_horiz": new_h_Ch, "new_vertic": new_v_Ch}));
   }
   catch {
-      console.log('extractCheckerMovement_2'); //вывод в консоль
+      console.log('extractCheckerMovement_err'); //вывод в консоль
       return 0; //подозрительное преобразование типов
   }
 }
@@ -996,7 +992,7 @@ app.post('/ru_move', (req, res) => {
                           "vertic": active_Ch[i].vertic, "isQueen": active_Ch[i].isQueen}
                           ));
                 comp_flag = true;
-                UpdateCheckersField(req, checkers, function(statuscode) {
+                UpdateCheckersField(req, checkers, chosen_ch, movedChecker, function(statuscode) {
                   console.log('List of all checkers after move:', JSON.stringify(checkers));
                   if (statuscode)
                     res.status(200).json(movedChecker);
@@ -1076,7 +1072,8 @@ app.post('/ru_after_move', (req, res) => {
             else {      
               SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
                 if (statuscode) {
-                  UpdateCheckersField(req, checkers, function(statuscode) {
+                  var ph = []; ph.horiz = 0; ph.vertic = 0;
+                  UpdateCheckersField(req, checkers, ph, ph, function(statuscode) {
                     console.log('List of all checkers after end of turn:', JSON.stringify(checkers));
                     console.log('End of turn');
                     res.status(200).send(statuscode);
@@ -1545,7 +1542,7 @@ app.post('/en_move', (req, res) => {
                           "turnedQueen": Qfl}
                           ));
                 comp_flag = true;
-                UpdateCheckersField(req, checkers, function(statuscode) {
+                UpdateCheckersField(req, checkers, chosen_ch, movedChecker, function(statuscode) {
                   console.log('List of all checkers after move:', JSON.stringify(checkers));
                   if (statuscode)
                     res.status(200).json(movedChecker);
@@ -1627,7 +1624,8 @@ app.post('/en_after_move', (req, res) => {
             else {      
               SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
                 if (statuscode) {
-                  UpdateCheckersField(req, checkers, function(statuscode) {
+                  var ph = []; ph.horiz = 0; ph.vertic = 0;
+                  UpdateCheckersField(req, checkers, ph, ph, function(statuscode) {
                     console.log('List of all checkers after end of turn:', JSON.stringify(checkers));
                     console.log('End of turn');
                     res.status(200).send(statuscode);
@@ -2384,7 +2382,7 @@ app.post('/tu_move', (req, res) => {
                           "turnedQueen": Qfl, "forbidden_direction": opp_direction}
                           ));
                 comp_flag = true;
-                UpdateCheckersField(req, checkers, function(statuscode) {
+                UpdateCheckersField(req, checkers, chosen_ch, movedChecker, function(statuscode) {
                   console.log('List of all checkers after move:', JSON.stringify(checkers));
                   if (statuscode)
                     res.status(200).json(movedChecker);
@@ -2473,7 +2471,8 @@ app.post('/tu_after_move', (req, res) => {
             else {      
               SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
                 if (statuscode) {
-                  UpdateCheckersField(req, checkers, function(statuscode) {
+                  var ph = []; ph.horiz = 0; ph.vertic = 0;
+                  UpdateCheckersField(req, checkers, ph, ph, function(statuscode) {
                     console.log('List of all checkers after end of turn:', 
                     JSON.stringify(checkers));
                     console.log('End of turn');
@@ -2496,7 +2495,8 @@ app.post('/tu_after_move', (req, res) => {
           }
           SetActiveColor(req, inactive_Ch[0].color, function(statuscode) {
             if (statuscode) {
-              UpdateCheckersField(req, checkers, function(statuscode) {
+              var ph = []; ph.horiz = 0; ph.vertic = 0;
+              UpdateCheckersField(req, checkers, ph, ph, function(statuscode) {
                 console.log('List of all checkers after end of turn:', 
                 JSON.stringify(checkers));
                 console.log('End of turn');
