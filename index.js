@@ -787,7 +787,7 @@ function checkersCanMove(active_Ch, inactive_Ch, BeatFlag) {
  }
   if (BeatFlag == true) {
     for (var i = 0; i < checkersCM.length; i++) {
-      if (active_Ch[i].isQueen == true) 
+      if (checkersCM[i].isQueen == true) 
         moves = beat_move_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
       else moves = beat_move_not_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
       if (moves.length == 0) {
@@ -798,7 +798,7 @@ function checkersCanMove(active_Ch, inactive_Ch, BeatFlag) {
   }
   else {
     for (var i = 0; i < checkersCM.length; i++) {
-      if (active_Ch[i].isQueen == true) 
+      if (checkersCM[i].isQueen == true) 
         moves = reg_move_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
       else moves = reg_move_not_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
       if (moves.length == 0) {
@@ -1380,7 +1380,7 @@ function checkersCanMove_en(active_Ch, inactive_Ch, BeatFlag) {
   }
    if (BeatFlag == true) {
      for (var i = 0; i < checkersCM.length; i++) {
-       if (active_Ch[i].isQueen == true) 
+       if (checkersCM[i].isQueen == true) 
          moves = beat_move_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
        else moves = beat_move_not_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
        if (moves.length == 0) {
@@ -1391,7 +1391,7 @@ function checkersCanMove_en(active_Ch, inactive_Ch, BeatFlag) {
    }
    else {
      for (var i = 0; i < checkersCM.length; i++) {
-       if (active_Ch[i].isQueen == true) 
+       if (checkersCM[i].isQueen == true) 
          moves = reg_move_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
        else moves = reg_move_not_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
        if (moves.length == 0) {
@@ -2239,7 +2239,7 @@ function checkersCanMove_tu(active_Ch, inactive_Ch, BeatFlag) {
   }
    if (BeatFlag == true) {
      for (var i = 0; i < checkersCM.length; i++) {
-       if (active_Ch[i].isQueen == true) 
+       if (checkersCM[i].isQueen == true) 
          moves = beat_move_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
        else moves = beat_move_not_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
        if (moves.length == 0) {
@@ -2250,7 +2250,7 @@ function checkersCanMove_tu(active_Ch, inactive_Ch, BeatFlag) {
    }
    else {
      for (var i = 0; i < checkersCM.length; i++) {
-       if (active_Ch[i].isQueen == true) 
+       if (checkersCM[i].isQueen == true) 
          moves = reg_move_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
        else moves = reg_move_not_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
        if (moves.length == 0) {
