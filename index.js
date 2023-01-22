@@ -331,13 +331,15 @@ function reg_move_not_Q_check(OurCH, EnCH, checker) {
           break;
         }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++)
+    if ( brfl == false) {
+      for (var j = 0; j < EnCH.length; j++)
       if (EnCH[j].horiz == reg_moves[i].horiz)
         if (EnCH[j].vertic == reg_moves[i].vertic) {
           reg_moves.splice(i,1);
           brfl = true;
           break;
         }
+    }
     if (brfl == true) {
       i--;
       brfl = false;
@@ -495,19 +497,23 @@ function beat_move_not_Q_check(OurCH, EnCH, checker) {
         }
     //после проверим свободно ли поле, на которое перемещается шашка:
     //есть ли в полях союзные шашки?:
-    for (var j = 0; j < OurCH.length; j++) 
+    if (brfl == false) {
+      for (var j = 0; j < OurCH.length; j++) 
       if (OurCH[j].horiz == beat_moves[i].horiz)
         if (OurCH[j].vertic == beat_moves[i].vertic) {
           brfl = true;
           break;
         }
+    }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++) 
-      if (EnCH[j].horiz == beat_moves[i].horiz)
-        if (EnCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++) 
+        if (EnCH[j].horiz == beat_moves[i].horiz)
+          if (EnCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       beat_moves.splice(i,1);
       enemy_check.splice(i,1);
@@ -772,6 +778,38 @@ function beat_move_Q_check(OurCH, EnCH, checker) {
   return beat_moves;
 }
 
+//вывод списка шашек с доступным ходом
+function checkersCanMove(active_Ch, inactive_Ch, BeatFlag) {
+ checkersCM = [];
+ for (var i = 0; i < active_Ch.length; i++) {
+  checkersCM[i] = { horiz: active_Ch[i].horiz, vertic: active_Ch[i].vertic,
+                    isQueen: active_Ch[i].isQueen, color: active_Ch[i].color };
+ }
+  if (BeatFlag == true) {
+    for (var i = 0; i < checkersCM.length; i++) {
+      if (active_Ch[i].isQueen == true) 
+        moves = beat_move_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
+      else moves = beat_move_not_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
+      if (moves.length == 0) {
+        checkersCM.splice(i,1);
+        i--;
+      }
+    }
+  }
+  else {
+    for (var i = 0; i < checkersCM.length; i++) {
+      if (active_Ch[i].isQueen == true) 
+        moves = reg_move_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
+      else moves = reg_move_not_Q_check(active_Ch, inactive_Ch, checkersCM[i]);
+      if (moves.length == 0) {
+        checkersCM.splice(i,1);
+        i--;
+      }
+    }
+  }
+  return checkersCM;
+}
+
 //проверка на то, может ли простая шашка превратится в дамку
 function can_turn_Q_check(color, movedChecker) {
   var horiz_to_check; //выбирается, какая диагональ будет чекатся
@@ -874,10 +912,14 @@ app.post('/ru_turn_begin', (req, res) => {
           break;
         }
       }
+      //составление списка шашек которые могут ходить (для бота)
+      var checkersWmoves = checkersCanMove(active_Ch, inactive_Ch, BeatFlag);
       console.log('Player can make a beat move?:', BeatFlag);
       SetBeatFlag(req, BeatFlag, function(statuscode) {
-        res.status(200).send(statuscode);
-        return;
+        if (statuscode) {        
+          res.status(200).json(checkersWmoves);
+          return;
+        }
       })
     })
   })
@@ -1133,13 +1175,15 @@ function reg_move_not_Q_check_en(OurCH, EnCH, checker) {
           break;
         }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++)
-      if (EnCH[j].horiz == reg_moves[i].horiz)
-        if (EnCH[j].vertic == reg_moves[i].vertic) {
-          reg_moves.splice(i,1);
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++)
+        if (EnCH[j].horiz == reg_moves[i].horiz)
+          if (EnCH[j].vertic == reg_moves[i].vertic) {
+            reg_moves.splice(i,1);
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       i--;
       brfl = false;
@@ -1176,13 +1220,15 @@ function reg_move_Q_check_en(OurCH, EnCH, checker) {
           break;
         }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++)
-      if (EnCH[j].horiz == reg_moves[i].horiz)
-        if (EnCH[j].vertic == reg_moves[i].vertic) {
-          reg_moves.splice(i,1);
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++)
+        if (EnCH[j].horiz == reg_moves[i].horiz)
+          if (EnCH[j].vertic == reg_moves[i].vertic) {
+            reg_moves.splice(i,1);
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       i--;
       brfl = false;
@@ -1232,19 +1278,23 @@ function beat_move_not_Q_check_en(OurCH, EnCH, checker) {
         }
     //после проверим свободно ли поле, на которое перемещается шашка:
     //есть ли в полях союзные шашки?:
-    for (var j = 0; j < OurCH.length; j++) 
-      if (OurCH[j].horiz == beat_moves[i].horiz)
-        if (OurCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < OurCH.length; j++) 
+        if (OurCH[j].horiz == beat_moves[i].horiz)
+          if (OurCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++) 
-      if (EnCH[j].horiz == beat_moves[i].horiz)
-        if (EnCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++) 
+        if (EnCH[j].horiz == beat_moves[i].horiz)
+          if (EnCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       beat_moves.splice(i,1);
       enemy_check.splice(i,1);
@@ -1293,19 +1343,23 @@ function beat_move_Q_check_en(OurCH, EnCH, checker) {
         }
     //после проверим свободно ли поле, на которое перемещается шашка:
     //есть ли в полях союзные шашки?:
-    for (var j = 0; j < OurCH.length; j++) 
-      if (OurCH[j].horiz == beat_moves[i].horiz)
-        if (OurCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < OurCH.length; j++) 
+        if (OurCH[j].horiz == beat_moves[i].horiz)
+          if (OurCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++) 
-      if (EnCH[j].horiz == beat_moves[i].horiz)
-        if (EnCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++) 
+        if (EnCH[j].horiz == beat_moves[i].horiz)
+          if (EnCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       beat_moves.splice(i,1);
       enemy_check.splice(i,1);
@@ -1316,6 +1370,39 @@ function beat_move_Q_check_en(OurCH, EnCH, checker) {
   //console.log('Potential enemy checkers:', enemy_check);
   return beat_moves;
 }
+
+//вывод списка шашек с доступным ходом
+function checkersCanMove_en(active_Ch, inactive_Ch, BeatFlag) {
+  checkersCM = [];
+  for (var i = 0; i < active_Ch.length; i++) {
+   checkersCM[i] = { horiz: active_Ch[i].horiz, vertic: active_Ch[i].vertic,
+                     isQueen: active_Ch[i].isQueen, color: active_Ch[i].color };
+  }
+   if (BeatFlag == true) {
+     for (var i = 0; i < checkersCM.length; i++) {
+       if (active_Ch[i].isQueen == true) 
+         moves = beat_move_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
+       else moves = beat_move_not_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
+       if (moves.length == 0) {
+         checkersCM.splice(i,1);
+         i--;
+       }
+     }
+   }
+   else {
+     for (var i = 0; i < checkersCM.length; i++) {
+       if (active_Ch[i].isQueen == true) 
+         moves = reg_move_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
+       else moves = reg_move_not_Q_check_en(active_Ch, inactive_Ch, checkersCM[i]);
+       if (moves.length == 0) {
+         checkersCM.splice(i,1);
+         i--;
+       }
+     }
+   }
+   return checkersCM;
+ }
+ 
 
 //проверка на то, может ли простая шашка превратится в дамку
 function can_turn_Q_check_en(color, movedChecker) {
@@ -1419,10 +1506,14 @@ app.post('/en_turn_begin', (req, res) => {
           break;
         }
       }
+      //составление списка шашек которые могут ходить (для бота)
+      var checkersWmoves = checkersCanMove_en(active_Ch, inactive_Ch, BeatFlag);
       console.log('Player can make a beat move?:', BeatFlag);
       SetBeatFlag(req, BeatFlag, function(statuscode) {
-        res.status(200).send(statuscode);
-        return;
+        if (statuscode) {        
+          res.status(200).json(checkersWmoves);
+          return;
+        }
       })
     })
   })
@@ -1687,13 +1778,15 @@ function reg_move_not_Q_check_tu(OurCH, EnCH, checker) {
           break;
         }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++)
-      if (EnCH[j].horiz == reg_moves[i].horiz)
-        if (EnCH[j].vertic == reg_moves[i].vertic) {
-          reg_moves.splice(i,1);
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++)
+        if (EnCH[j].horiz == reg_moves[i].horiz)
+          if (EnCH[j].vertic == reg_moves[i].vertic) {
+            reg_moves.splice(i,1);
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       i--;
       brfl = false;
@@ -1856,19 +1949,23 @@ function beat_move_not_Q_check_tu(OurCH, EnCH, checker) {
         }
     //после проверим свободно ли поле, на которое перемещается шашка:
     //есть ли в полях союзные шашки?:
-    for (var j = 0; j < OurCH.length; j++) 
-      if (OurCH[j].horiz == beat_moves[i].horiz)
-        if (OurCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < OurCH.length; j++) 
+        if (OurCH[j].horiz == beat_moves[i].horiz)
+          if (OurCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     //есть ли в полях шашки оппонента?:
-    for (var j = 0; j < EnCH.length; j++) 
-      if (EnCH[j].horiz == beat_moves[i].horiz)
-        if (EnCH[j].vertic == beat_moves[i].vertic) {
-          brfl = true;
-          break;
-        }
+    if (brfl == false) {
+      for (var j = 0; j < EnCH.length; j++) 
+        if (EnCH[j].horiz == beat_moves[i].horiz)
+          if (EnCH[j].vertic == beat_moves[i].vertic) {
+            brfl = true;
+            break;
+          }
+    }
     if (brfl == true) {
       beat_moves.splice(i,1);
       enemy_check.splice(i,1);
@@ -2133,6 +2230,38 @@ function beat_move_Q_check_tu(OurCH, EnCH, checker, forb_dir) {
   return beat_moves;
 }
 
+//вывод списка шашек с доступным ходом
+function checkersCanMove_tu(active_Ch, inactive_Ch, BeatFlag) {
+  checkersCM = [];
+  for (var i = 0; i < active_Ch.length; i++) {
+   checkersCM[i] = { horiz: active_Ch[i].horiz, vertic: active_Ch[i].vertic,
+                     isQueen: active_Ch[i].isQueen, color: active_Ch[i].color };
+  }
+   if (BeatFlag == true) {
+     for (var i = 0; i < checkersCM.length; i++) {
+       if (active_Ch[i].isQueen == true) 
+         moves = beat_move_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
+       else moves = beat_move_not_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
+       if (moves.length == 0) {
+         checkersCM.splice(i,1);
+         i--;
+       }
+     }
+   }
+   else {
+     for (var i = 0; i < checkersCM.length; i++) {
+       if (active_Ch[i].isQueen == true) 
+         moves = reg_move_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
+       else moves = reg_move_not_Q_check_tu(active_Ch, inactive_Ch, checkersCM[i]);
+       if (moves.length == 0) {
+         checkersCM.splice(i,1);
+         i--;
+       }
+     }
+   }
+   return checkersCM;
+ }
+
 //проверка на то, может ли простая шашка превратится в дамку
 function can_turn_Q_check_tu(color, movedChecker) {
   var horiz_to_check; //выбирается, какая диагональ будет чекатся
@@ -2258,10 +2387,14 @@ app.post('/tu_turn_begin', (req, res) => {
           break;
         }
       }
+      //составление списка шашек которые могут ходить (для бота)
+      var checkersWmoves = checkersCanMove_tu(active_Ch, inactive_Ch, BeatFlag);
       console.log('Player can make a beat move?:', BeatFlag);
       SetBeatFlag(req, BeatFlag, function(statuscode) {
-        res.status(200).send(statuscode);
-        return;
+        if (statuscode) {        
+          res.status(200).json(checkersWmoves);
+          return;
+        }
       })
     })
   })
