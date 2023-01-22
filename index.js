@@ -107,7 +107,7 @@ function extractBeatFlag(req, callback) { //extractBeatFlag(req, function(BeatFl
 function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, function(callback) {...})
   try { //валидация успешна
     var cur_ses = req.body.current_session;
-    var json = JSON.stringify({"current_session": cur_ses, "BeatFlag": BeatFlag});
+    var json = JSON.stringify({"current_session": cur_ses, "beat_flag": BeatFlag});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
     //request.open("POST", `http://${server_ip_address}:${server_port}/SetBeatFlag`); //гет запрос на сервер
     request.open("POST", `http://localhost:3000/SetBeatFlag`); //гет запрос на сервер
