@@ -230,7 +230,14 @@ function initAfterMove(req, addit_Fl, movedCh, addit_moves, callback) { //initAf
                         if (statuscode.status)
                             addit_Fl = false;
                         else addit_Fl = true;
-                        callback(statuscode, movedCh, addit_Fl); 
+                        if (addit_Fl) {
+                            initAfterMove(req, addit_Fl, movedCh, statuscode, function(statuscode, movedCh, addit_Fl) {
+                                callback(statuscode, movedCh, addit_Fl);
+                            })
+                        }
+                        else {
+                            callback(statuscode, movedCh, addit_Fl);
+                        }    
                     }
                     else {
                         //список ходов не пришел
@@ -267,16 +274,8 @@ extractCheckers(req, function(checkers) {
         var movedCh = [];
         var addit_moves = [];
         initAfterMove(req, addit_Fl, movedCh, addit_moves, function(statuscode, movedCh, addit_Fl) {
-            if (addit_Fl) {
-                initAfterMove(req, addit_Fl, movedCh, statuscode, function(statuscode, movedCh, addit_Fl) {
-                    res.status(200).send(statuscode);
-                    return;
-                })
-            }
-            else {
-                res.status(200).send(statuscode);
-                return;
-            }   
+            res.status(200).send(statuscode);
+            return; 
         })
     })
 })
