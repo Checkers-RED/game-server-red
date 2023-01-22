@@ -128,50 +128,88 @@ function initAvailableMoves(req, callback) { //initAvailableMoves(req, function(
 }
 
 //инициализация выбора рандомного хода
-function initMove(req, callback) { //initMove(req, function() {...})
-    initAvailableMoves(req, function(moves, chosenCh) {
-        if(moves){
-            //выбираем случайный ход случайной шашки:
-            var c = Math.floor(Math.random()*moves.length);
-            chosenMove = moves[c];
-            console.log('Bot has chosen this move:', chosenMove); //вывод в консоль
-            try { //валидация успешна
-                var cur_ses = req.body.current_session;
-                var json = JSON.stringify({"current_session": cur_ses,
-                "color": chosenCh.color, "horiz": chosenCh.horiz,
-                "vertic": chosenCh.vertic, "isQueen": chosenCh.isQueen,
-                "new_horiz": chosenMove.horiz, "new_vertic": chosenMove.vertic});
-                const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-                //request.open("POST", `http://${server_ip_address}:${server_port}/ru_move`); //гет запрос на сервер
-                request.open("POST", `http://localhost:${serv_port}/ru_move`); 
-                request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
-                request.send(json); //хз
-                request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-                    if (request.response) {
-                        //пришли данные о перемещенной шашке
-                        var movedChecker = JSON.parse(request.response);
-                        console.log('initMove_ok'); //вывод в консоль
-                        console.log('checker info after move:', movedChecker); //вывод в консоль
-                        callback(movedChecker); 
-                    }
-                    else {
-                        //список ходов не пришел
-                        console.log('initMove_no_response'); //вывод в консоль
-                        callback();
-                    }
+function initMove(req, addit_Fl, movedCh, addit_moves, callback) { //initMove(req, function() {...})
+    if (addit_Fl) {
+        //выбираем случайный ход случайной шашки:
+        var c = Math.floor(Math.random()*addit_moves.length);
+        chosenMove = addit_moves[c];
+        console.log('Bot has chosen this move:', chosenMove); //вывод в консоль
+        try { //валидация успешна
+            var cur_ses = req.body.current_session;
+            var json = JSON.stringify({"current_session": cur_ses,
+            "color": movedCh.color, "horiz": movedCh.horiz,
+            "vertic": movedCh.vertic, "isQueen": movedCh.isQueen,
+            "new_horiz": chosenMove.horiz, "new_vertic": chosenMove.vertic});
+            const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+            //request.open("POST", `http://${server_ip_address}:${server_port}/ru_move`); //гет запрос на сервер
+            request.open("POST", `http://localhost:${serv_port}/ru_move`); 
+            request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+            request.send(json); //хз
+            request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+                if (request.response) {
+                    //пришли данные о перемещенной шашке
+                    var movedChecker = JSON.parse(request.response);
+                    console.log('initMove_ok'); //вывод в консоль
+                    console.log('checker info after move:', movedChecker); //вывод в консоль
+                    callback(movedChecker); 
                 }
+                else {
+                    //список ходов не пришел
+                    console.log('initMove_no_response'); //вывод в консоль
+                    callback();
                 }
-            catch {
-                console.log('initMove_err'); //вывод в консоль
-                return 0; //подозрительное преобразование типов
             }
+            }
+        catch {
+            console.log('initMove_err'); //вывод в консоль
+            return 0; //подозрительное преобразование типов
         }
-    })
+    }
+    else {
+        initAvailableMoves(req, function(moves, chosenCh) {
+            if(moves){
+                //выбираем случайный ход случайной шашки:
+                var c = Math.floor(Math.random()*moves.length);
+                chosenMove = moves[c];
+                console.log('Bot has chosen this move:', chosenMove); //вывод в консоль
+                try { //валидация успешна
+                    var cur_ses = req.body.current_session;
+                    var json = JSON.stringify({"current_session": cur_ses,
+                    "color": chosenCh.color, "horiz": chosenCh.horiz,
+                    "vertic": chosenCh.vertic, "isQueen": chosenCh.isQueen,
+                    "new_horiz": chosenMove.horiz, "new_vertic": chosenMove.vertic});
+                    const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
+                    //request.open("POST", `http://${server_ip_address}:${server_port}/ru_move`); //гет запрос на сервер
+                    request.open("POST", `http://localhost:${serv_port}/ru_move`); 
+                    request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
+                    request.send(json); //хз
+                    request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
+                        if (request.response) {
+                            //пришли данные о перемещенной шашке
+                            var movedChecker = JSON.parse(request.response);
+                            console.log('initMove_ok'); //вывод в консоль
+                            console.log('checker info after move:', movedChecker); //вывод в консоль
+                            callback(movedChecker); 
+                        }
+                        else {
+                            //список ходов не пришел
+                            console.log('initMove_no_response'); //вывод в консоль
+                            callback();
+                        }
+                    }
+                    }
+                catch {
+                    console.log('initMove_err'); //вывод в консоль
+                    return 0; //подозрительное преобразование типов
+                }
+            }
+        })
+    }
 }
 
 //инициализация действий после хода
-function initAfterMove(req, callback) { //initAfterMove(req, function() {...})
-    initMove(req, function(movedCh) {
+function initAfterMove(req, addit_Fl, movedCh, addit_moves, callback) { //initAfterMove(req, function() {...})
+    initMove(req, addit_Fl, movedCh, addit_moves, function(movedCh) {
         if(movedCh){
             try { //валидация успешна
                 var cur_ses = req.body.current_session;
@@ -189,7 +227,10 @@ function initAfterMove(req, callback) { //initAfterMove(req, function() {...})
                         var statuscode = JSON.parse(request.response);
                         console.log('initAfterMove_ok'); //вывод в консоль
                         console.log('Info after move:', statuscode); //вывод в консоль
-                        callback(statuscode); 
+                        if (statuscode.status)
+                            addit_Fl = false;
+                        else addit_Fl = true;
+                        callback(statuscode, movedCh, addit_Fl); 
                     }
                     else {
                         //список ходов не пришел
@@ -207,12 +248,14 @@ function initAfterMove(req, callback) { //initAfterMove(req, function() {...})
 }
 
 app.post('/bot_moves', (req, res) => {
+console.log('--------------------------------------------------------------------');
 extractCheckers(req, function(checkers) {
     extractActiveColor(req, function(active_color) {
         const request = new XMLHttpRequest();
         active_Ch = []; //массив шашек бота
         moves = []; //массив доступных ходов выбранной шашки
         var statuscode; //статус код, который будет отправлен в ответ к серверу
+        var addit_Fl = false; //флаг доп хода
         //Валидация цвета
         if (active_color == "white") active_Ch = checkers.white;
         else if (active_color == "black") active_Ch = checkers.black;
@@ -221,9 +264,19 @@ extractCheckers(req, function(checkers) {
             res.status(400).send(statuscode);
             return;
         }
-        initAfterMove(req, function(statuscode) {
-            res.status(200).send(statuscode);
-            return;
+        var movedCh = [];
+        var addit_moves = [];
+        initAfterMove(req, addit_Fl, movedCh, addit_moves, function(statuscode, movedCh, addit_Fl) {
+            if (addit_Fl) {
+                initAfterMove(req, addit_Fl, movedCh, statuscode, function(statuscode, movedCh, addit_Fl) {
+                    res.status(200).send(statuscode);
+                    return;
+                })
+            }
+            else {
+                res.status(200).send(statuscode);
+                return;
+            }   
         })
     })
 })
