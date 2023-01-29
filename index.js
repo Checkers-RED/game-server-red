@@ -49,8 +49,17 @@ try { //валидация успешна
   request.send(json); //хз
   request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
     var checkers = JSON.parse(request.response); //запись в переменную ответ с сервера
+    var checkers1 = {"white": [], "black": []}; //преобразование переменной
+    for (var i = 0; i < checkers.length; i++) {
+      if (checkers[i].color == "white") {
+        checkers1.white.push(checkers[i]);
+      }
+      else if (checkers[i].color == "black") {
+        checkers1.black.push(checkers[i]);
+      }
+    }
     console.log('extractCheckers_ok'); //вывод в консоль
-    callback(checkers); 
+    callback(checkers1); 
   }
 }
 catch {
