@@ -3,8 +3,7 @@ const express = require('express'); //подключение нужных биб
 const cors = require('cors');
 const XMLHttpRequest = require('xhr2');
 
-const hostname = '127.0.0.1'; //хост
-const port = 80; //номер порта клиента
+const port = 4040; //номер порта клиента
 
 const server_ip_address = "85.143.223.149" //ip сервера БД
 const server_port = 2020 //порт сервера БД
