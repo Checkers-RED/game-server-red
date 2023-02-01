@@ -39,11 +39,13 @@ app.get('/session_checkers', (req, res) => {
 //получение полного списка шашек
 function extractCheckers(req, callback) { //extractCheckers(req, function(checkers) {...})
 try { //валидация успешна
+  let buffer = -1;
   var cur_ses = req.body.current_session;
   var json = JSON.stringify({"current_session": cur_ses});
   const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-  //request.open("POST", `http://${server_ip_address}:${server_port}/SessionСheckers`); //гет запрос на сервер
-  request.open("POST", `http://localhost:3000/`); //гет запрос на сервер
+  request.open("POST", `http://${server_ip_address}:${server_port}/SessionCheckers`); //гет запрос на сервер
+  //request.open("POST", `http://localhost:3000/`); //гет запрос на сервер
+  request.setRequestHeader("User-Agent", "game-server-red-1.0.0");
   request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
   request.send(json); //хз
   request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
@@ -51,9 +53,17 @@ try { //валидация успешна
     var checkers1 = {"white": [], "black": []}; //преобразование переменной
     for (var i = 0; i < checkers.length; i++) {
       if (checkers[i].color == "white") {
+        //buffer = checkers[i].vertic;
+        //checkers[i].vertic = checkers[i].horiz;
+        //checkers[i].horiz = buffer;
+
         checkers1.white.push(checkers[i]);
       }
       else if (checkers[i].color == "black") {
+        //buffer = checkers[i].vertic;
+        //checkers[i].vertic = checkers[i].horiz;
+        //checkers[i].horiz = buffer;
+
         checkers1.black.push(checkers[i]);
       }
     }
@@ -73,8 +83,8 @@ function extractActiveColor(req, callback) { //extractActiveColor(req, function(
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-    //request.open("POST", `http://${server_ip_address}:${server_port}/GetActiveColor`); //гет запрос на сервер
-    request.open("POST", `http://localhost:3000/GetActiveColor`); //гет запрос на сервер
+    request.open("POST", `http://${server_ip_address}:${server_port}/GetActiveColor`); //гет запрос на сервер
+    //request.open("POST", `http://localhost:3000/GetActiveColor`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
@@ -95,8 +105,8 @@ function extractBeatFlag(req, callback) { //extractBeatFlag(req, function(BeatFl
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-    //request.open("POST", `http://${server_ip_address}:${server_port}/GetBeatFlag`); //гет запрос на сервер
-    request.open("POST", `http://localhost:3000/GetBeatFlag`); //гет запрос на сервер
+    request.open("POST", `http://${server_ip_address}:${server_port}/GetBeatFlag`); //гет запрос на сервер
+    //request.open("POST", `http://localhost:3000/GetBeatFlag`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
@@ -117,12 +127,12 @@ function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, fun
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "beat_flag": BeatFlag});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-    //request.open("POST", `http://${server_ip_address}:${server_port}/SetBeatFlag`); //гет запрос на сервер
-    request.open("POST", `http://localhost:3000/SetBeatFlag`); //гет запрос на сервер
+    request.open("POST", `http://${server_ip_address}:${server_port}/SetBeatFlag`); //гет запрос на сервер
+    //request.open("POST", `http://localhost:3000/SetBeatFlag`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      var statuscode = JSON.parse(request.status); //запись в переменную ответ с сервера
       console.log('SetBeatFlag_ok'); //вывод в консоль
       callback(statuscode); 
     }
@@ -137,6 +147,7 @@ function SetBeatFlag(req, BeatFlag, callback) { //SetBeatFlag(req, BeatFlag, fun
 function UpdateCheckersField(req, checkers, chosen_ch, movedChecker, callback) {
 //UpdateCheckersField(req, checkers, function(callback) {...})
   try { //валидация успешна
+    console.log("HERE")
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "white": checkers.white, 
                 "black": checkers.black, "previous_horiz": chosen_ch.horiz,
@@ -144,17 +155,20 @@ function UpdateCheckersField(req, checkers, chosen_ch, movedChecker, callback) {
                 "new_horiz": movedChecker.horiz,
                 "new_vertic": movedChecker.vertic,});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-    //request.open("POST", `http://${server_ip_address}:${server_port}/UpdateCheckersField`); //гет запрос на сервер
-    request.open("POST", `http://localhost:3000/UpdateCheckersField`); //гет запрос на сервер
+    request.open("POST", `http://${server_ip_address}:${server_port}/UpdateCheckersField`); //гет запрос на сервер
+    //request.open("POST", `http://localhost:3000/UpdateCheckersField`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
+    console.log("THERE")
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      console.log("SENT");
+      var statuscode = JSON.parse(request.status); //запись в переменную ответ с сервера
       console.log('UpdateCheckersField_ok'); //вывод в консоль
       callback(statuscode); 
     }
   }
   catch {
+    console.log("NOTHING")
     console.log('UpdateCheckersField_err'); //вывод в консоль
     return 0; //подозрительное преобразование типов
   }
@@ -166,12 +180,12 @@ function SetActiveColor(req, color, callback) { //SetActiveColor(req, color, fun
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "active_color": color});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-    //request.open("POST", `http://${server_ip_address}:${server_port}/SetActiveColor`); //гет запрос на сервер
-    request.open("POST", `http://localhost:3000/SetActiveColor`); //гет запрос на сервер
+    request.open("POST", `http://${server_ip_address}:${server_port}/SetActiveColor`); //гет запрос на сервер
+    //request.open("POST", `http://localhost:3000/SetActiveColor`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
-      var statuscode = JSON.parse(request.response); //запись в переменную ответ с сервера
+      var statuscode = JSON.parse(request.status); //запись в переменную ответ с сервера
       console.log('SetActiveColor_ok'); //вывод в консоль
       callback(statuscode); 
     }
@@ -188,8 +202,8 @@ function SetWinnerColor(req, color, callback) { //SetWinnerColor(req, color, fun
     var cur_ses = req.body.current_session;
     var json = JSON.stringify({"current_session": cur_ses, "winner_color": color});
     const request = new XMLHttpRequest(); //специальная переменная для работы с команадами ниже
-    //request.open("POST", `http://${server_ip_address}:${server_port}/SetWinnerColor`); //гет запрос на сервер
-    request.open("POST", `http://localhost:3000/SetWinnerColor`); //гет запрос на сервер
+    request.open("POST", `http://${server_ip_address}:${server_port}/SetWinnerColor`); //гет запрос на сервер
+    //request.open("POST", `http://localhost:3000/SetWinnerColor`); //гет запрос на сервер
     request.setRequestHeader('Content-Type', 'application/json'); //параметры Хэдера запроса
     request.send(json); //хз
     request.onload = (e) => { //как только придет ответ функция будет работать с пришедшими значениями
